@@ -1,0 +1,20 @@
+{"level":"error","message":"Connection error: failed to connect to server [localhost:27017] on first connect [MongoError: connect ECONNREFUSED 127.0.0.1:27017]","timestamp":"2017-07-10T21:43:51.041Z"}
+{"level":"info","message":"Connected to DB!","timestamp":"2017-07-10T21:50:33.466Z"}
+{"level":"info","message":"New user - myapi:abc1234","timestamp":"2017-07-10T21:50:33.806Z"}
+{"level":"info","message":"New client - android:SomeRandomCharsAndNumbers","timestamp":"2017-07-10T21:50:33.809Z"}
+{"level":"info","message":"Express server listening on port 1337","timestamp":"2017-07-10T21:54:46.577Z"}
+{"level":"info","message":"Connected to DB!","timestamp":"2017-07-10T21:54:46.600Z"}
+{"level":"info","message":"Express server listening on port 1337","timestamp":"2017-07-10T22:21:31.253Z"}
+{"level":"info","message":"Connected to DB!","timestamp":"2017-07-10T22:21:31.287Z"}
+{"level":"error","message":"test","timestamp":"2017-07-10T22:22:24.221Z"}
+{"level":"info","message":"Express server listening on port 1337","timestamp":"2017-07-10T22:22:24.263Z"}
+{"level":"info","message":"Connected to DB!","timestamp":"2017-07-10T22:22:24.284Z"}
+{"level":"info","message":"aaa","timestamp":"2017-07-10T22:25:19.374Z"}
+{"level":"info","message":"Express server listening on port 1337","timestamp":"2017-07-10T22:25:19.434Z"}
+{"level":"info","message":"Connected to DB!","timestamp":"2017-07-10T22:25:19.460Z"}
+{"level":"info","message":"","timestamp":"2017-07-10T22:25:44.759Z"}
+{"level":"info","message":"Express server listening on port 1337","timestamp":"2017-07-10T22:25:44.800Z"}
+{"level":"info","message":"Connected to DB!","timestamp":"2017-07-10T22:25:44.824Z"}
+{"level":"info","message":"undefined","timestamp":"2017-07-10T22:26:20.114Z"}
+{"level":"info","message":"Express server listening on port 1337","timestamp":"2017-07-10T22:26:20.155Z"}
+{"level":"info","message":"Connected to DB!","timestamp":"2017-07-10T22:26:20.177Z"}
