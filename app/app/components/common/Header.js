@@ -28,6 +28,10 @@ class Header extends React.Component {
               <LinkContainer to="/contact">
                 <NavItem eventKey={3}>Contact</NavItem>
               </LinkContainer>
+
+              <LinkContainer to="/testpage">
+                <NavItem eventKey={4}>Test Page</NavItem>
+              </LinkContainer>
             </Nav>
           </Navbar.Collapse>
         </Navbar>
