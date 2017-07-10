@@ -12,7 +12,7 @@ class TestPage extends React.Component {
     };
 
     // This binding is necessary to make `this` work in the callback
-    this.hello = this.hello.bind(this);
+    //this.hello = this.hello.bind(this);
   }
 
   hello() {
@@ -32,7 +32,7 @@ class TestPage extends React.Component {
           </Grid>
         </Jumbotron>
         <Grid>
-          <button onClick={this.hello}>Hello APBI</button>
+          <button onClick={() => {this.hello()}}>Hello APBI</button>
         </Grid>
       </div>
     );
