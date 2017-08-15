@@ -4,11 +4,15 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var config = require ('./libs/config');
+var mongoose = require('mongoose');
 
 var index = require('./routes/index');
 var users = require('./routes/users');
 
 var app = express();
+
+var testa = '1234';
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -22,12 +26,20 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+//begin test
 app.use('/', index);
 app.use('/users', users);
 
 app.get('/a',function(req, res){
-	res.send('hello world')
+	//res.send(config.stores.file.store.mongoose)
 });
+
+// Database Connection
+//mongoose.connect(config.stores.file.store.mongoose.database);  
+
+//console.log(testa);
+//end test
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   var err = new Error('Not Found');

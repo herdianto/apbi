@@ -1,0 +1,7 @@
+{
+    "mongoose": {
+        "port": 27017,
+        "uri": "mongodb://localhost/APBIDB",
+        "database": "mongodb://localhost:27017"
+    }
+}
