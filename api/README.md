@@ -9,4 +9,5 @@ mine is: C:\Program Files\MongoDB\Server\3.4\bin
 type "mongod" to start
 
 references:
-login API: http://blog.slatepeak.com/refactoring-a-basic-authenticated-api-with-node-express-and-mongo/
+Auth Process: http://thejackalofjavascript.com/architecting-a-restful-node-js-app/
+verify token: http://jwt.io
