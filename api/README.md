@@ -11,3 +11,7 @@ type "mongod" to start
 references:
 Auth Process: http://thejackalofjavascript.com/architecting-a-restful-node-js-app/
 verify token: http://jwt.io
+mysql process: https://www.terlici.com/2015/08/13/mysql-node-express.html
+
+good resource:
+http://callbackhell.com/

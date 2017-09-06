@@ -1,3 +1,4 @@
+var db = require('../helper/db')
 var users = {
  
   getAll: function(req, res) {
@@ -28,9 +29,15 @@ var users = {
     var id = req.params.id;
     data.splice(id, 1) // Spoof a DB call
     res.json(true);
+  },
+
+  test: function(req, res){
+      db.get().query('SELECT * FROM user', function (err, rows) {
+      if (err) return res.json(rows);
+    })
   }
 };
- 
+  
 var data = [{
   name: 'user 1',
   id: '1'
