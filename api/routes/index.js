@@ -4,14 +4,14 @@ var router = express.Router();
 var auth = require('./auth.js');
 var products = require('./products.js');
 var user = require('./users.js');
-var test = require('./test_select.js');
+var test_DB = require('../helper/db2.js');
 //var email = require('./email.js');
  
 /*
- * Routes that can be accessed by any one
+ * Routes that can be accessed by anyone
  */
 router.post('/login', auth.login);
-router.get('/test', user.test);
+router.get('/test', test_DB.test);
 //router.get('/email', email);
  
 /*

@@ -37,19 +37,16 @@ app.use(function(req, res, next) {
 });
 
 // Connect to MySQL on start
-/*
-db.connect(db.MODE_PRODUCTION, function(err) {
-  if (err) {
-    console.log('Unable to connect to MySQL.')
-    process.exit(1)
-  } else {
+// db.connect(db.MODE_PRODUCTION, function(err) {
+//   if (err) {
+//     console.log('Unable to connect to MySQL.')
+//     process.exit(1)
+//   } else {
     // Start the server
-    app.set('port', process.env.PORT || 3001);
+    app.set('port', process.env.PORT || 3000);
     
     var server = app.listen(app.get('port'), function() {
       console.log('Express server listening on port ' + server.address().port);
     })
-  }
-})
-*/
-
+//   }
+// });
