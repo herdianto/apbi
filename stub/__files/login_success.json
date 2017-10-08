@@ -1,0 +1,5 @@
+{
+    "status": 200,
+    "message": "loggedIn",
+    "token": "dummy_Tok3n"
+}
