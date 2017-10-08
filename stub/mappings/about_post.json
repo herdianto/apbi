@@ -1,12 +1,14 @@
 {
-     "priority": 1000,
     "request": {
-        "method": "ANY",
-        "urlPathPattern": "/api/([a-z]*)"
+        "method": "POST",
+        "url": "/api/about/post",
+        "bodyPatterns" : [ {
+            "matchesJsonPath" : "$..[?(@.token=='dummy_Tok3n')]"
+        } ]
     },
     "response": {
         "status": 200,
-        "bodyFileName": "no_token.json",
+        "bodyFileName": "about_post.json",
 		"fixedDelayMilliseconds": 500,
 		"headers": {
             "Content-Type": "text/json",

@@ -1,12 +1,11 @@
 {
-     "priority": 1000,
     "request": {
-        "method": "ANY",
-        "urlPathPattern": "/api/([a-z]*)"
+        "method": "POST",
+        "url": "/register"
     },
     "response": {
         "status": 200,
-        "bodyFileName": "no_token.json",
+        "bodyFileName": "register.json",
 		"fixedDelayMilliseconds": 500,
 		"headers": {
             "Content-Type": "text/json",

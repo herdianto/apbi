@@ -1,12 +1,11 @@
 {
-     "priority": 1000,
     "request": {
-        "method": "ANY",
-        "urlPathPattern": "/api/([a-z]*)"
+        "method": "POST",
+        "url": "/api/adshome/view/1"
     },
     "response": {
         "status": 200,
-        "bodyFileName": "no_token.json",
+        "bodyFileName": "ads_view.json",
 		"fixedDelayMilliseconds": 500,
 		"headers": {
             "Content-Type": "text/json",
