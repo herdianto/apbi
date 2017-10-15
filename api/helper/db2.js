@@ -31,7 +31,7 @@ var user_management = {
     },
     validate: function(req, result) {
       var params = [req.body.username, req.body.password];
-      var query_cmd = 'SELECT * FROM user WHERE user_id = ? and password = md5(?) ';
+      var query_cmd = 'SELECT * FROM apbi_user WHERE user_id = ? and password = md5(?) ';
       var test = new Object();
       var dbUserObj  = new Array();
       query(mysql.format(query_cmd, params))
