@@ -1,0 +1,37 @@
+{
+	"name": "apbi",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"start": "node node_modules/react-native/local-cli/cli.js start",
+		"test": "jest"
+	},
+	"dependencies": {
+		"babel-loader": "^7.1.2",
+		"babel-preset-env": "^1.6.0",
+		"babel-preset-react": "^6.24.1",
+		"moment": "^2.19.1",
+		"native-base": "^2.3.3",
+		"react": "^16.0.0-alpha.12",
+		"react-dom": "^16.0.0",
+		"react-moment": "^0.6.5",
+		"react-native": "0.48.3",
+		"react-native-fit-image": "^1.5.3",
+		"react-native-keyboard-spacer": "^0.4.1",
+		"react-native-router-flux": "^3.38.0",
+		"react-native-timeago": "^0.3.0",
+		"react-native-web": "^0.1.9",
+		"shuffle-array": "^1.0.1",
+		"webpack": "^3.7.1",
+		"webpack-dev-server": "^2.9.1"
+	},
+	"devDependencies": {
+		"babel-jest": "21.2.0",
+		"babel-preset-react-native": "4.0.0",
+		"jest": "21.2.1",
+		"react-test-renderer": "16.0.0-alpha.12"
+	},
+	"jest": {
+		"preset": "react-native"
+	}
+}
