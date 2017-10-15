@@ -1,0 +1,10 @@
+{
+   "news_id" : "1",
+   "title_news" : "hello",
+   "content_news" : "world",
+   "date_news" : "2017-02-10 18:00:00",
+   "attachement_news" : {
+      "name_attachment" : "picture1"
+   },
+"user_id" : "user1"
+}

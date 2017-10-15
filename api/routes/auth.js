@@ -1,4 +1,5 @@
 var jwt = require('jwt-simple');
+var mysql = require('mysql');
 var moment = require('moment');
 var user_function = require('../helper/db2.js');
 var auth = {
@@ -50,6 +51,7 @@ var auth = {
         return dbUserObj;
     },
 }
+
 // private method
 function genToken(user) {
     var expires = moment().add(20,'seconds').valueOf(); //20 seconds

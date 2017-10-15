@@ -1,0 +1,18 @@
+{
+    "request": {
+        "method": "POST",
+        "url": "/api/news/delete/1",
+        "bodyPatterns" : [ {
+            "matchesJsonPath" : "$..[?(@.token=='dummy_Tok3n')]"
+        } ]
+    },
+    "response": {
+        "status": 200,
+        "bodyFileName": "news_delete.json",
+		"fixedDelayMilliseconds": 500,
+		"headers": {
+            "Content-Type": "text/json",
+            "Cache-Control": "no-cache"
+        }
+    }
+}

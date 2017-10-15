@@ -1,0 +1,15 @@
+{
+    "request": {
+        "method": "POST",
+        "url": "/api/adshome/view/1"
+    },
+    "response": {
+        "status": 200,
+        "bodyFileName": "ads_view.json",
+		"fixedDelayMilliseconds": 500,
+		"headers": {
+            "Content-Type": "text/json",
+            "Cache-Control": "no-cache"
+        }
+    }
+}

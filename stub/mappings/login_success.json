@@ -1,0 +1,18 @@
+{
+    "request": {
+        "method": "POST",
+        "url": "/login",
+        "bodyPatterns" : [ {
+            "matchesJsonPath" : "$..[?(@.username=='nunu')]"
+        } ]
+    },
+    "response": {
+        "status": 200,
+        "bodyFileName": "login_success.json",
+		"fixedDelayMilliseconds": 500,
+		"headers": {
+            "Content-Type": "text/json",
+            "Cache-Control": "no-cache"
+        }
+    }
+}

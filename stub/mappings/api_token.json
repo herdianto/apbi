@@ -1,0 +1,16 @@
+{
+     "priority": 1000,
+    "request": {
+        "method": "ANY",
+        "urlPathPattern": "/api/([a-z]*)"
+    },
+    "response": {
+        "status": 200,
+        "bodyFileName": "no_token.json",
+		"fixedDelayMilliseconds": 500,
+		"headers": {
+            "Content-Type": "text/json",
+            "Cache-Control": "no-cache"
+        }
+    }
+}
