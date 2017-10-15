@@ -11,7 +11,7 @@ var test_DB = require('../helper/db2.js');
  * Routes that can be accessed by anyone
  */
 router.post('/login', auth.login);
-router.get('/test', test_DB.test);
+router.get('/test', test_DB.getUserById);
 //router.get('/email', email);
  
 /*

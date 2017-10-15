@@ -25,6 +25,36 @@ var query = function (command) {
 //module.exports = query;
 
 var user_management = {
+    test2: function(){
+      console.log("zzz");
+      return "aaa";
+    },
+    validate: function(req, result) {
+      var params = [req.body.username, req.body.password];
+      var query_cmd = 'SELECT * FROM user WHERE user_id = ? and password = md5(?) ';
+      var test = new Object();
+      var dbUserObj  = new Array();
+      query(mysql.format(query_cmd, params))
+      .then(function (r) {
+          console.log(r.length);
+          for(var i=0; i<r.length; i++){
+            console.log(r[i].user_id);
+            test.id = r[i].user_id;
+            dbUserObj.push(test);
+          }
+          if(dbUserObj.length > 0){
+            console.log("login success");
+            result(dbUserObj);
+          }else{
+            console.log("login failed");
+            result(null);
+          }
+      })
+      .catch(function(e){
+          console.log("error: "+e);
+          result(null);
+      });
+    },
     getUserById : function(req, res) {
       req = 'herdi';
       var params = [req];

@@ -15,3 +15,7 @@ mysql process: https://www.terlici.com/2015/08/13/mysql-node-express.html
 
 good resource:
 http://callbackhell.com/
+
+Oct 14, 2017
+how to insert image in forum:
+http://www.html.am/html-editors/online-html-editor.cfm

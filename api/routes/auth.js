@@ -1,5 +1,6 @@
 var jwt = require('jwt-simple');
 var moment = require('moment');
+var user_function = require('../helper/db2.js');
 var auth = {
     login: function(req, res) {
         var username = req.body.username || '';
@@ -12,26 +13,28 @@ var auth = {
             });
             return;
         }
-        // Fire a query to your DB and check if the credentials are valid
-        var dbUserObj = auth.validate(username, password);
-        if (!dbUserObj) { // If authentication fails, we send a 401 back
-            res.status(401);
-            res.json({
-                "status": 401,
-                "message": "Invalid credentials"
-            });
-            return;
-        }
-        if (dbUserObj) {
-            // If authentication is success, we will generate a token
-            // and dispatch it to the client
-            res.json(genToken(dbUserObj));
-        }
+
+        // Fire a query to your DB and check if the credentials are valid        
+        user_function.validate(req, function(dbUserObj){
+            if (!dbUserObj) { // If authentication fails, we send a 401 back
+                res.status(401);
+                res.json({
+                    "status": 401,
+                    "message": "Invalid credentials"
+                });
+                return;
+            }
+            if (dbUserObj) {
+                // If authentication is success, we will generate a token
+                // and dispatch it to the client
+                res.json(genToken(dbUserObj));
+            }
+        });
     },
     validate: function(username, password) {
         // spoofing the DB response for simplicity
         var dbUserObj = { // spoofing a userobject from the DB. 
-            name: 'arvind',
+            name: 'arvinds',
             role: 'admin',
             username: 'arvind@myapp.com'
         };
@@ -59,9 +62,11 @@ function genToken(user) {
         require('../config/secret')()
     );
     return {
-        token: token,
-        expires: expires,
-        user: user
+        status: 200,
+        message: "Successful Login",
+        token: token
+        //expires: expires,
+        //user: user
     };
 }
 
