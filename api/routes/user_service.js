@@ -150,6 +150,7 @@ var user_service = {
             });
           })
           .catch(function(e){
+            console.log("error: "+e);
             res.json({
               "status": 500,
               "message": "Internal Server Error"
