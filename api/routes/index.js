@@ -1,18 +1,19 @@
 var express = require('express');
 var router = express.Router();
  
-var auth = require('./auth.js');
-var products = require('./products.js');
-var user = require('./users.js');
-var test_DB = require('../helper/db2.js');
-//var email = require('./email.js');
+var auth = require('./auth');
+var user_service = require('./user_service');
+var products = require('./products');
+var user = require('./users');
+
  
 /*
  * Routes that can be accessed by anyone
  */
 router.post('/login', auth.login);
-router.get('/test', test_DB.getUserById);
-//router.get('/email', email);
+router.post('/register', user_service.register);
+router.post('/forget', user_service.forget);
+router.get('/forget_action', user_service.apply_password);
  
 /*
  * Routes that can be accessed only by autheticated users

@@ -1,7 +1,7 @@
 var jwt = require('jwt-simple');
 var mysql = require('mysql');
 var moment = require('moment');
-var user_function = require('../helper/db2.js');
+var user_service = require('./user_service.js');
 var auth = {
     login: function(req, res) {
         var username = req.body.username || '';
@@ -16,7 +16,7 @@ var auth = {
         }
 
         // Fire a query to your DB and check if the credentials are valid        
-        user_function.validate(req, function(dbUserObj){
+        user_service.validate(req, function(dbUserObj){
             if (!dbUserObj) { // If authentication fails, we send a 401 back
                 res.status(401);
                 res.json({
