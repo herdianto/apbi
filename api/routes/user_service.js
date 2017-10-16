@@ -17,14 +17,11 @@ var user_service = {
       var query_update = 'UPDATE apbi_user set last_login = ? where user_id = ?';
       query(mysql.format(query_cmd, params))
       .then(function (r) {
-          console.log(r.length);
           for(var i=0; i<r.length; i++){
-            console.log(r[i].user_id);
             test.id = r[i].user_id;
             dbUserObj.push(test);
           }
           if(dbUserObj.length > 0){
-            console.log("login success");
             query(mysql.format(query_update, params_update));
             result(dbUserObj);
           }else{
@@ -70,7 +67,6 @@ var user_service = {
       let random_password_md5 = md5(random_password);
       let server_host = 'http://localhost:3000';
       let current_time = new Date();
-      //console.log(current_time);
       current_time = date.format(current_time, 'YYYY-MM-DD HH:mm:ss');
 
       let params_select = [req.body.username];
@@ -97,6 +93,7 @@ var user_service = {
             //send email to user
             email_service.sendMail(mailOptions, function(error, info){
               if (error) {
+                console.log("error: "+error);
                 res.json({
                   "status": 500,
                   "message": "Internal Server Error"
