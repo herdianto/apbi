@@ -1,7 +1,21 @@
 {
-    "mongoose": {
-        "port": 27017,
-        "uri": "mongodb://localhost/APBIDB",
-        "database": "mongodb://localhost:27017"
+    "database": {
+        "host": "127.0.0.1",
+        "user": "root",
+        "password": "",
+        "database": "apbi"
+    },
+    "jwt_signature": "BWP.apbi.project.s3cr3T.k3y!@#",
+    "host_url": "http://localhost:3000",
+    "token":{
+        "duration": 7,
+        "duration_unit": "days"
+    },
+    "http_code":{
+        "ok": 200,
+        "in_server_err": 500,
+        "bad_req": 400,
+        "unauthorized": 401,
+        "not_found": 404
     }
 }

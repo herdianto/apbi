@@ -2,7 +2,6 @@ var express = require('express');
 var path = require('path');
 var logger = require('morgan');
 var bodyParser = require('body-parser');
-var db = require('./helper/db'); 
 var app = express();
  
 app.use(logger('dev'));
@@ -25,7 +24,7 @@ app.all('/*', function(req, res, next) {
 // Only the requests that start with /api/v1/* will be checked for the token.
 // Any URL's that do not follow the below pattern should be avoided unless you 
 // are sure that authentication is not needed
-app.all('/api/v1/*', [require('./middlewares/validateRequest')]);
+app.all('/api/*', [require('./middlewares/validateRequest')]);
  
 app.use('/', require('./routes'));
  
@@ -40,17 +39,8 @@ app.use(function(req, res, next) {
   });
 });
 
-// Connect to MySQL on start
-// db.connect(db.MODE_PRODUCTION, function(err) {
-//   if (err) {
-//     console.log('Unable to connect to MySQL.')
-//     process.exit(1)
-//   } else {
-    // Start the server
-    app.set('port', process.env.PORT || 3000);
-    
-    var server = app.listen(app.get('port'), function() {
-      console.log('Express server listening on port ' + server.address().port);
-    })
-//   }
-// });
+// Start the server
+app.set('port', process.env.PORT || 3000);   
+  var server = app.listen(app.get('port'), function() {
+     console.log('Express server listening on port ' + server.address().port);
+  })

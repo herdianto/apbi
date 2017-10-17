@@ -29,8 +29,11 @@ router.delete('/api/v1/product/:id', products.delete);
  */
 router.get('/api/v1/admin/users', user.getAll);
 router.get('/api/v1/admin/user/:id', user.getOne);
-router.post('/api/v1/admin/user/', user.create);
 router.put('/api/v1/admin/user/:id', user.update);
 router.delete('/api/v1/admin/user/:id', user.delete);
+
+router.post('/api/refresh_token', auth.renew_token);
+router.post('/api/update_profile', user_service.update_profile);
+router.post('/api/admin/member_approval', user_service.set_member_status);
  
 module.exports = router;

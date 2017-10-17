@@ -3,27 +3,26 @@ var query = require('../helper/db_connection');
 var email_service = require('./email_service');
 var date = require('date-and-time');
 var randomstring = require("randomstring");
+var jwt = require('jwt-simple');
 var md5 = require('md5');
+var config = require('../config/config.json');
 
 var user_service = {
     validate: function(req, result) {
       let current_time = new Date();
       date.format(current_time, 'YYYY-MM-DD HH:mm:ss');
-      var params = [req.body.username, req.body.password, 'active'];
-      var query_cmd = 'SELECT * FROM apbi_user WHERE user_id = ? and password = md5(?) and user_status = ?';
-      var test = new Object();
-      var dbUserObj  = new Array();
-      var params_update = [current_time, req.body.username];
-      var query_update = 'UPDATE apbi_user set last_login = ? where user_id = ?';
+      let params = [req.body.username, req.body.password, 'active'];
+      let query_cmd = 'SELECT user_id, role FROM apbi_user WHERE user_id = ? and password = md5(?) and user_status = ?';
+      let users = new Object();
+      let params_update = [current_time, req.body.username];
+      let query_update = 'UPDATE apbi_user set last_login = ? where user_id = ?';
       query(mysql.format(query_cmd, params))
       .then(function (r) {
-          for(var i=0; i<r.length; i++){
-            test.id = r[i].user_id;
-            dbUserObj.push(test);
-          }
-          if(dbUserObj.length > 0){
+          users.id = r[0].user_id;
+          users.role = r[0].role;
+          if(users.id != ""){
             query(mysql.format(query_update, params_update));
-            result(dbUserObj);
+            result(users);
           }else{
             console.log("login failed");
             result(null);
@@ -65,7 +64,7 @@ var user_service = {
       let random_string = randomstring.generate(75);
       let random_password = randomstring.generate(8);
       let random_password_md5 = md5(random_password);
-      let server_host = 'http://localhost:3000';
+      let server_host = config.host_url;
       let current_time = new Date();
       current_time = date.format(current_time, 'YYYY-MM-DD HH:mm:ss');
 
@@ -124,7 +123,7 @@ var user_service = {
       date.format(current_time, 'YYYY-MM-DD HH:mm:ss');
       params_insert = [param_values.user_id,param_values.name,param_values.address,param_values.email,param_values.password,current_time];
       params_check = [param_values.user_id];
-      var query_cmd_insert = "INSERT INTO apbi_user VALUES (?,?,?,?,md5(?),'viewer','','''','','',?,'active','','','');";
+      var query_cmd_insert = "INSERT INTO apbi_user VALUES (?,?,?,?,md5(?),'non_member','','''','','',?,'active','','','');";
       var query_cmd_check = "SELECT COUNT(user_id) as isExist FROM apbi_user where user_id = ?;";
       query(mysql.format(query_cmd_check, params_check))
       .then(function(result){
@@ -165,15 +164,48 @@ var user_service = {
       });
       
     },
-    test : function(req, res){
-      var params = new Array();
-      params[0] = '2017-09-14 20:22:00';
-      params[1] = 'nunu';
-      var query_cmd = 'UPDATE user SET last_login = ? WHERE user_id = ?;';
-      query(mysql.format(query_cmd, params)).
-      then(function(r){console.log(r)}).
-      catch(function(e){console.log(e)});
-      res.json("aaa");
+    update_profile: function(req, res){
+      try{
+        let decoded = jwt.decode(req.body.token, config.jwt_signature);
+        let params=req.body;
+        if(decoded.user == params.user_id){
+          let params_update = [params.name, params.address, params.email, params.password, params.deliv_addr, params.account_no, params.bank_name, decoded.user];
+          let query_update = 'UPDATE apbi_user set name=?, address=?, email=?, password=md5(?), delivery_addr=?, account_no=?, bank_name=? ' +
+          'WHERE user_id = ?';
+          query(mysql.format(query_update, params_update))
+          .then(function(result){
+            res.status(config.http_code.ok);
+            res.json({
+              "status": config.http_code.ok,
+              "message": "Successfully Updated"
+            });
+          })
+          .catch(function(error){
+            console.log("error: "+error);
+            res.status(config.http_code.in_server_err);
+            res.json({
+                "status": config.http_code.in_server_err,
+                "message": "Internal Server Error"
+            });
+          });
+        }else{
+          res.status(config.http_code.unauthorized);
+          res.json({
+              "status": config.http_code.unauthorized,
+              "message": "Unauthorized"
+          });
+        }
+      }catch(error){
+        console.log("error: "+error);
+        res.status(config.http_code.in_server_err);
+        res.json({
+            "status": config.http_code.in_server_err,
+            "message": "Internal Server Error"
+        });
+      }
+    },
+    set_member_status: function(req, res){
+      res.json("zz");
     }
 };
 module.exports = user_service;

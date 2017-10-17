@@ -1,4 +1,3 @@
-var db = require('../helper/db')
 var users = {
  
   getAll: function(req, res) {
