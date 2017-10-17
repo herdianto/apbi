@@ -26,7 +26,7 @@ app.all('/*', function(req, res, next) {
 // are sure that authentication is not needed
 app.all('/api/*', [require('./middlewares/validateRequest')]);
  
-app.use('/', require('./routes'));
+app.use('/', require('./routes/index'));
  
 // If no route is matched by now, it must be a 404
 app.use(function(req, res, next) {
