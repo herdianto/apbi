@@ -205,7 +205,41 @@ var user_service = {
       }
     },
     set_member_status: function(req, res){
-      res.json("zz");
+      let params=req.body;
+      let params_update = [params.approve_as, params.username];
+      let query_update = 'UPDATE apbi_user set role = ? where user_id = ?'
+      if(params.approve_as != 'member' && params.approve_as != 'non_member'){
+        res.status(config.http_code.bad_req);
+        res.json({
+            "status": config.http_code.bad_req,
+            "message": "Bad Request"
+        });
+        return;
+      }
+      query(mysql.format(query_update, params_update))
+      .then(function(result){
+        if(result.affectedRows>0){
+          res.status(config.http_code.ok);
+          res.json({
+            "status": config.http_code.ok,
+            "message": "Successfully Updated"
+          });
+        }else{
+          res.status(config.http_code.ok);
+          res.json({
+            "status": config.http_code.ok,
+            "message": "No user was updated"
+          });
+        }
+      })
+      .catch(function(error){
+        console.log("error: "+error);
+        res.status(config.http_code.in_server_err);
+        res.json({
+            "status": config.http_code.in_server_err,
+            "message": "Internal Server Error"
+        });
+      });
     }
 };
 module.exports = user_service;
