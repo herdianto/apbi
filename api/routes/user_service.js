@@ -124,7 +124,7 @@ var user_service = {
       date.format(current_time, 'YYYY-MM-DD HH:mm:ss');
       params_insert = [param_values.user_id,param_values.name,param_values.address,param_values.email,param_values.password,current_time];
       params_check = [param_values.user_id];
-      var query_cmd_insert = "INSERT INTO apbi_user VALUES (?,?,?,?,md5(?),'viewer','','''','','',?,'active','');";
+      var query_cmd_insert = "INSERT INTO apbi_user VALUES (?,?,?,?,md5(?),'viewer','','''','','',?,'active','','','');";
       var query_cmd_check = "SELECT COUNT(user_id) as isExist FROM apbi_user where user_id = ?;";
       query(mysql.format(query_cmd_check, params_check))
       .then(function(result){
