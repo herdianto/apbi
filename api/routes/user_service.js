@@ -1,6 +1,6 @@
 var mysql = require('mysql');
 var query = require('../helper/db_connection');
-var email_service = require('./email_service');
+var email_service = require('../helper/email_connection');
 var date = require('date-and-time');
 var randomstring = require("randomstring");
 var jwt = require('jwt-simple');
@@ -10,7 +10,7 @@ var config = require('../config/config.json');
 var user_service = {
     validate: function(req, result) {
       let current_time = new Date();
-      date.format(current_time, 'YYYY-MM-DD HH:mm:ss');
+      //date.format(current_time, 'YYYY-MM-DD HH:mm:ss');
       let params = [req.body.username, req.body.password, 'active'];
       let query_cmd = 'SELECT user_id, role FROM apbi_user WHERE user_id = ? and password = md5(?) and user_status = ?';
       let users = new Object();

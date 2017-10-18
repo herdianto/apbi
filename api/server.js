@@ -3,7 +3,7 @@ var path = require('path');
 var logger = require('morgan');
 var bodyParser = require('body-parser');
 var app = express();
- 
+
 app.use(logger('dev'));
 app.use(bodyParser.json());
  
@@ -25,7 +25,8 @@ app.all('/*', function(req, res, next) {
 // Any URL's that do not follow the below pattern should be avoided unless you 
 // are sure that authentication is not needed
 app.all('/api/*', [require('./middlewares/validateRequest')]);
- 
+// to serve static images and create virtual directory
+app.use('/images', express.static('images'));
 app.use('/', require('./routes/index'));
  
 // If no route is matched by now, it must be a 404
