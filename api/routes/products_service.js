@@ -141,8 +141,15 @@ var product_service = {
     });
   },
   update: function(req, res){
-    let params_update =[req.body.produt_id];
-    let query_cmd_update = "UPDATE product SET status = 'inactive' WHERE product_id= ?;"
+    let params = req.body;
+    for(let i=0; i<req.body.product.length; i++){
+      let product = req.body.product[i];
+      let admin_name = jwt.decode(params.token, config.jwt_signature).user;
+      let current_time = new Date();;
+      let params_update =[product.name, product.description, product.member_price, product.non_member_price, current_time, admin_name, product.status, product.product_id];
+      let query_cmd_update = "UPDATE product SET name=?, description=?, member_price=?, non_member_price=?, last_update_date=?, last_update_by=?, status=? WHERE product_id= ?;"
+      console.log(mysql.format(query_cmd_update, params_update));
+    }
     res.json("asd");
   }
 };
