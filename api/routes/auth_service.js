@@ -30,7 +30,7 @@ var auth = {
             }
             catch(error){
                 res.status(config.http_code.in_server_err);
-                res.json({
+                res.json({                
                     "status": config.http_code.in_server_err,
                     "message": "Internal Server Error"
                 });
@@ -44,9 +44,6 @@ var auth = {
             });
             return;
         }
-        let userObj={
-
-        };
     },
     login: function(req, res) {
         var username = req.body.username || '';
@@ -91,12 +88,18 @@ function genToken(user) {
         //{exp: expires},
         config.jwt_signature
     );
+    var profile = {
+        user_id: user.id,
+        address: user.address,
+        delivery_address : user.delivery_addr,
+        email: user.email
+    };
     return {
         status: 200,
         message: "Successful",
+        profile: profile,
         token: token
-        //expires: expires,
-        //user: user
+        //expires: expires
     };
 }
 

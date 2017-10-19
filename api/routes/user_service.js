@@ -12,7 +12,7 @@ var user_service = {
       let current_time = new Date();
       //date.format(current_time, 'YYYY-MM-DD HH:mm:ss');
       let params = [req.body.username, req.body.password, 'active'];
-      let query_cmd = 'SELECT user_id, role FROM apbi_user WHERE user_id = ? and password = md5(?) and user_status = ?';
+      let query_cmd = 'SELECT * FROM apbi_user WHERE user_id = ? and password = md5(?) and user_status = ?';
       let users = new Object();
       let params_update = [current_time, req.body.username];
       let query_update = 'UPDATE apbi_user set last_login = ? where user_id = ?';
@@ -20,6 +20,9 @@ var user_service = {
       .then(function (r) {
           users.id = r[0].user_id;
           users.role = r[0].role;
+          users.address = r[0].address;
+          users.email = r[0].email;
+          users.delivery_addr = r[0].delivery_addr;          
           if(users.id != ""){
             query(mysql.format(query_update, params_update));
             result(users);

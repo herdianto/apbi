@@ -12,7 +12,7 @@ var product_service = {
     let query_cmd_prd_id = "SELECT CONCAT('prd_',max(CAST(SUBSTRING(product_id,5,30) as UNSIGNED))+1) as prd_id from product;"
     query(query_cmd_prd_id)
     .then(function(result){
-      console.log(result[0].prd_id);
+      //console.log(result[0].prd_id);
       var file_number = 1;
       var storage = multer.diskStorage({
         destination: function(req, file, callback){
@@ -66,7 +66,7 @@ var product_service = {
                 "status": config.http_code.in_server_err,
                 "message": "Internal Server Error"
             });
-        });
+          });
         }
       });
     })
@@ -224,7 +224,55 @@ var product_service = {
     });
   },
   buy: function(req, res){
-    res.json("buy");
+    let user_name = jwt.decode(req.body.token, config.jwt_signature).user;
+    let current_time = new Date();
+    let query_cmd_transID = "SELECT CONCAT('transID_',max(CAST(SUBSTRING(transaction_id,9,30) as UNSIGNED))+1) as trans_id from transaction_history;";
+    query(query_cmd_transID).then(function(result_1){
+      console.log(result_1);
+      let params_insert =[result_1[0].trans_id, user_name, current_time, '0'];
+      let query_cmd_insert = "INSERT INTO transaction_history (transaction_id, user_id, order_date, state) "+
+      "VALUES (?,?,?,?)"; 
+      query(mysql.format(query_cmd_insert, params_insert)).then(function(result_2){
+        for(let i=0; i<req.body.product.length; i++){
+          product_service.buy_single_product(result_1[0].trans_id, req.body.product[i], function(result){
+            console.log("a");
+            res.json("buy");
+          })
+        }
+      })
+      .catch(function(error){
+        console.log("error: "+error);
+        res.status(config.http_code.in_server_err);
+        res.json({
+          "status": config.http_code.in_server_err,
+          "message": "Internal Server Error"
+          });
+        });
+    })
+    .catch(function(error){
+      console.log("error: "+error);
+      res.status(config.http_code.in_server_err);
+      res.json({
+        "status": config.http_code.in_server_err,
+        "message": "Internal Server Error"
+      });
+    });   
+  },
+  buy_single_product: function(trans_id, product, callback){
+    let params_insert =[trans_id, product.product_id, product.quantity];
+    let query_cmd_insert = "INSERT INTO transaction_detail (transaction_id, product_id, quantity) "+
+    "VALUES (?,?,?)";
+     query(mysql.format(query_cmd_insert, params_insert)).then(function(result_3){
+          callback("success");
+        })
+        .catch(function(error){
+          console.log("error: "+error);
+          res.status(config.http_code.in_server_err);
+          res.json({
+            "status": config.http_code.in_server_err,
+            "message": "Internal Server Error"
+          });
+});
   }
 };
  
