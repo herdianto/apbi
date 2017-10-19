@@ -11,6 +11,7 @@ var product_service = {
     let query_cmd_prd_id = "SELECT CONCAT('prd_',max(CAST(SUBSTRING(product_id,5,30) as UNSIGNED))+1) as prd_id from product;"
     query(query_cmd_prd_id)
     .then(function(result){
+      console.log(result[0].prd_id);
       var file_number = 1;
       var storage = multer.diskStorage({
         destination: function(req, file, callback){
@@ -24,7 +25,7 @@ var product_service = {
       var upload = multer({storage: storage}).array('photos', 3); //max can upload 3 photos
       upload(req, res, function(err){
         if(err){
-          return res.json(err);  
+          return res.json("error: " +err);  
         }
         else{
           let params = req.body;
@@ -67,16 +68,34 @@ var product_service = {
         });
         }
       });
+    })
+    .catch(function(error){
+            console.log("error: "+error);
+            res.status(config.http_code.in_server_err);
+            res.json({
+                "status": config.http_code.in_server_err,
+                "message": "Internal Server Error"
+            })
     });
   },
   search: function(req, res){
     let obats = new Array();
+    let images = new Array();
     let obat = new Object();
     let params_select =['%'+req.query.keyword+'%', '%'+req.query.keyword+'%'];
     let query_cmd_select = "SELECT * FROM product WHERE name LIKE ? OR description LIKE ? and status ='active';"
     query(mysql.format(query_cmd_select, params_select)).
     then(function(result){
       for(let i=0; i<result.length; i++){
+        let params_select = [result[i].product_id];
+        let query_cmd_select = "SELECT product_id, url FROM attachment_url WHERE product_id = ?;"
+        console.log(mysql.format(query_cmd_select, params_select));
+        query(mysql.format(query_cmd_select, params_select)).then(function(images_data){
+          for(let j=0; j<images_data.length; j++){
+            images[j] = "/images/"+images_data[j].url;
+            console.log(images_data[j].url);
+          }
+        })
         obat = {
           product_id: result[i].product_id,
           name: result[i].name,
@@ -86,7 +105,8 @@ var product_service = {
           posted_date: result[i].posted_date,
           posted_by: result[i].posted_by,
           last_update_date: result[i].last_update_date,
-          last_update_by: result[i].last_update_by
+          last_update_by: result[i].last_update_by,
+          product_images:images 
         };
         obats[i]=obat;
       }
