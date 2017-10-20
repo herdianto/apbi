@@ -16,7 +16,7 @@ var product_service = {
       var file_number = 1;
       var storage = multer.diskStorage({
         destination: function(req, file, callback){
-          callback(null, './images');
+          callback(null, './static/images');
         },
         filename: function(req, file, callback){
           callback(null, result[0].prd_id + "_" + file_number+path.extname(file.originalname));
@@ -26,7 +26,12 @@ var product_service = {
       var upload = multer({storage: storage}).array('photos', 3); //max can upload 3 photos
       upload(req, res, function(err){
         if(err){
-          return res.json("error: " +err);  
+          res.status(config.http_code.in_server_err);
+          res.json({
+            "status": config.http_code.in_server_err,
+            "message": "Upload Failed"
+          });
+          return;
         }
         else{
           let params = req.body;
@@ -71,12 +76,40 @@ var product_service = {
       });
     })
     .catch(function(error){
-            console.log("error: "+error);
-            res.status(config.http_code.in_server_err);
-            res.json({
-                "status": config.http_code.in_server_err,
-                "message": "Internal Server Error"
-            })
+      console.log("error: "+error);
+      res.status(config.http_code.in_server_err);
+      res.json({
+        "status": config.http_code.in_server_err,
+        "message": "Internal Server Error"
+      })
+    });
+  },
+  upload_tr_proof: function(req, res){
+    console.log(req.body);
+    var storage = multer.diskStorage({
+      destination: function(req, file, callback){
+        callback(null, './static/payment_images');
+      },
+      filename: function(req, file, callback){
+        callback(null, "name" + "_" + path.extname(file.originalname));
+      }
+    });
+    var upload = multer({storage: storage}).single('payment_proof');
+    upload(req, res, function(err){
+      //console.log(req.body);
+      if(err){
+        res.status(config.http_code.in_server_err);
+        res.json({
+          "status": config.http_code.in_server_err,
+          "message": "Upload Failed"
+        });
+        return;
+      }else{
+        res.json({
+          "status": config.http_code.ok,
+          "message": "Upload Success"
+        });
+      }
     });
   },
   search: function(req, res){
@@ -287,7 +320,8 @@ var product_service = {
           });
         }
       }
-    )},
+    )
+  },
   buy_single_product: function(trans_id, product, membership, callback){
     let params_insert =[trans_id, product.product_id, product.quantity, product.product_id];
     if(membership == "member"){
@@ -311,22 +345,38 @@ var product_service = {
     );
   },
   get_transaction: function(req, res){
-    let user_name = jwt.decode(req.headers['x-token'], config.jwt_signature).user; 
-    let params_select =[user_name];
+    let token = jwt.decode(req.headers['x-token'], config.jwt_signature);
+    let user_name = token.user; 
+    let role = token.role;
     let transaction_lists = new Array();
     let products = new Array();
     let y=0;
     let x=0;
-    let query_cmd_select =
-    "SELECT b.transaction_id, b.order_date, b.payment_proof_uploaded_date, b.order_confirmed_date, b.delivery_date, b.transaction_done_date, b.state, " +
-    "a.price, a.quantity, "+
-    "c.product_id, c.name "+
-    "FROM transaction_detail a, transaction_history b, product c, apbi_user d "+
-    "WHERE a.transaction_id = b.transaction_id "+
-    "AND d.user_id = b.user_id "+
-    "AND a.product_id = c.product_id "+
-    "AND d.user_id = ? "+
-    "ORDER BY b.order_date ASC;"
+    let params_select, query_cmd_select;
+    if(role == "admin"){
+      params_select =[];
+      query_cmd_select =
+      "SELECT b.transaction_id, b.order_date, b.payment_proof_uploaded_date, b.order_confirmed_date, b.delivery_date, b.transaction_done_date, b.state, " +
+      "a.price, a.quantity, "+
+      "c.product_id, c.name "+
+      "FROM transaction_detail a, transaction_history b, product c, apbi_user d "+
+      "WHERE a.transaction_id = b.transaction_id "+
+      "AND d.user_id = b.user_id "+
+      "AND a.product_id = c.product_id "+
+      "ORDER BY b.order_date ASC;"
+    }else{
+      params_select =[user_name];
+      query_cmd_select =
+      "SELECT b.transaction_id, b.order_date, b.payment_proof_uploaded_date, b.order_confirmed_date, b.delivery_date, b.transaction_done_date, b.state, " +
+      "a.price, a.quantity, "+
+      "c.product_id, c.name "+
+      "FROM transaction_detail a, transaction_history b, product c, apbi_user d "+
+      "WHERE a.transaction_id = b.transaction_id "+
+      "AND d.user_id = b.user_id "+
+      "AND a.product_id = c.product_id "+
+      "AND d.user_id = ? "+
+      "ORDER BY b.order_date ASC;"
+    }
     query(mysql.format(query_cmd_select, params_select)).then(function(transactions){
       var trans = new Array();
       for(let i=0; i<transactions.length; i++){

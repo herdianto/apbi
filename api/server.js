@@ -26,7 +26,9 @@ app.all('/*', function(req, res, next) {
 // are sure that authentication is not needed
 app.all('/api/*', [require('./middlewares/validateRequest')]);
 // to serve static images and create virtual directory
-app.use('/images', express.static('images'));
+app.use('/images', express.static('static/images/'));
+app.use('/api/images/payment', express.static('static/payment_images/'));
+// API Routes
 app.use('/', require('./routes/index'));
  
 // If no route is matched by now, it must be a 404

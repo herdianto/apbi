@@ -26,9 +26,11 @@ router.post('/api/admin/member_approval', user_service.set_member_status);
 //product service
 router.get('/api/product/search', product_service.search);
 router.post('/api/product/buy', product_service.buy);
+router.get('/api/admin/product/get_transaction', product_service.get_transaction);
 router.get('/api/product/get_transaction', product_service.get_transaction);
 router.post('/api/admin/product/search', product_service.search_admin);
 router.post('/api/admin/product/insert', product_service.create);
 router.post('/api/admin/product/update', product_service.update);
+router.post('/api/admin/product/upload_trans_proof', product_service.upload_tr_proof);
 
 module.exports = router;
