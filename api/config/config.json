@@ -17,5 +17,13 @@
         "bad_req": 400,
         "unauthorized": 401,
         "not_found": 404
+    },
+    "order_status":{
+        "canceled": "Order Canceled",
+        "created": "Order Created",
+        "payment": "Payment Proof Uploaded",
+        "confirmed": "Order Confirmed",
+        "delivery": "Order is being delivered",
+        "completed": "Order completed"
     }
 }
