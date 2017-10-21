@@ -31,6 +31,7 @@ router.get('/api/product/get_transaction', product_service.get_transaction);
 router.post('/api/admin/product/search', product_service.search_admin);
 router.post('/api/admin/product/insert', product_service.create);
 router.post('/api/admin/product/update', product_service.update);
-router.post('/api/admin/product/upload_trans_proof', product_service.upload_tr_proof);
+router.post('/api/product/upload_trans_proof', product_service.upload_tr_proof);
+router.post('/api/admin/product/validate_transaction', product_service.validate_transaction);
 
 module.exports = router;

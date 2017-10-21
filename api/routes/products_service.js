@@ -84,20 +84,58 @@ var product_service = {
       })
     });
   },
+  validate_transaction: function(req, res){
+    let data = req.body;
+    let token = jwt.decode(data.token, config.jwt_signature);
+    let current_time = new Date();
+    var field = "";
+    if(data.status == 0) field = "order_canceled_date";
+    else if(data.status == 3 ) field = "order_confirmed_date";
+    else if(data.status == 4 ) field = "delivery_date";
+    else if(data.status == 5 ) field = "transaction_done_date";
+    query_cmd_update = "UPDATE transaction_history SET "+
+    "state = ? , "+ field + "= ? , last_updated_by = ? "+
+    "WHERE transaction_id = ?";
+    param_update = [data.status, current_time, token.user, data.trans_id];
+    query(mysql.format(query_cmd_update, param_update)).then(function(data){
+      if(data.affectedRows == 0){
+        res.status(config.http_code.ok);
+        res.json({
+          "status": config.http_code.ok,
+          "message": "No Record updated"
+        })
+      }else{
+        res.status(config.http_code.ok);
+        res.json({
+          "status": config.http_code.ok,
+          "message": "Update success"
+        })
+      }
+    }).catch(function(error){
+      console.log("error: "+error);
+      res.status(config.http_code.in_server_err);
+      res.json({
+        "status": config.http_code.in_server_err,
+        "message": "Internal Server Error"
+      });
+    });
+  },
   upload_tr_proof: function(req, res){
-    console.log(req.body);
-    var storage = multer.diskStorage({
+    let trans_id = "";
+    let token = jwt.decode(req.headers['x-token'], config.jwt_signature);
+    let storage = multer.diskStorage({
       destination: function(req, file, callback){
         callback(null, './static/payment_images');
       },
       filename: function(req, file, callback){
-        callback(null, "name" + "_" + path.extname(file.originalname));
+        trans_id = req.body.trans_id;
+        callback(null, token.user + "_" + trans_id + path.extname(file.originalname));
       }
     });
-    var upload = multer({storage: storage}).single('payment_proof');
+    let upload = multer({storage: storage}).single('payment_proof');
     upload(req, res, function(err){
-      //console.log(req.body);
       if(err){
+        console.log("error: "+error);
         res.status(config.http_code.in_server_err);
         res.json({
           "status": config.http_code.in_server_err,
@@ -105,10 +143,38 @@ var product_service = {
         });
         return;
       }else{
-        res.json({
-          "status": config.http_code.ok,
-          "message": "Upload Success"
-        });
+        let current_time = new Date();
+        params =[trans_id, req.file.filename, current_time];
+        query_cmd_select = "SELECT COUNT(transaction_id) as no FROM attachment_url WHERE transaction_id = ? AND url = ?;";
+        query(mysql.format(query_cmd_select, params)).then(function(result){
+          if(result[0].no == 0){
+            query_cmd_update = "UPDATE transaction_history SET "+
+            "state = '2',  payment_proof_uploaded_date = ?"+
+            "WHERE transaction_id = ?";
+            query(mysql.format(query_cmd_update, params));
+            query_cmd_insert = "INSERT INTO attachment_url (transaction_id, url) values (?,?);";
+            query(mysql.format(query_cmd_insert, params)).then(function(transactions){
+            res.status(config.http_code.ok);
+            res.json({
+            "status": config.http_code.ok,
+            "message": "Upload Success"
+          })
+          }).catch(function(error){
+            console.log("error: "+error);
+            res.status(config.http_code.in_server_err);
+            res.json({
+              "status": config.http_code.in_server_err,
+              "message": "Internal Server Error"
+            });
+          });   
+          }else{
+            res.status(config.http_code.ok);
+            res.json({
+              "status": config.http_code.ok,
+              "message": "Upload Success"
+            })
+          }          
+        });            
       }
     });
   },
@@ -266,7 +332,7 @@ var product_service = {
       function buy_products(membership, callback_2){
         let user_name = jwt.decode(req.body.token, config.jwt_signature).user;
         let current_time = new Date();
-        let query_cmd_transID = "SELECT CONCAT('transID_',max(CAST(SUBSTRING(transaction_id,9,30) as UNSIGNED))+1) as trans_id from transaction_history;";
+        let query_cmd_transID = "SELECT CONCAT('transID_',ifnull(max(CAST(SUBSTRING(transaction_id,9,30) as UNSIGNED)),0)+1) as trans_id from transaction_history;";
         query(query_cmd_transID).then(function(result_1){
           let counter = 0;
           let params_insert =[result_1[0].trans_id, user_name, current_time, '1'];
