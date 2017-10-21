@@ -422,18 +422,18 @@ var product_service = {
     if(role == "admin"){
       params_select =[];
       query_cmd_select =
-      "SELECT b.transaction_id, b.order_date, b.payment_proof_uploaded_date, b.order_confirmed_date, b.delivery_date, b.transaction_done_date, b.state, " +
+      "SELECT  t1.*, z.url from (SELECT b.transaction_id, b.order_date, b.payment_proof_uploaded_date, b.order_confirmed_date, b.delivery_date, b.transaction_done_date, b.state, " +
       "a.price, a.quantity, "+
       "c.product_id, c.name "+
       "FROM transaction_detail a, transaction_history b, product c, apbi_user d "+
       "WHERE a.transaction_id = b.transaction_id "+
       "AND d.user_id = b.user_id "+
       "AND a.product_id = c.product_id "+
-      "ORDER BY b.order_date ASC;"
+      "ORDER BY b.order_date ASC) t1 LEFT JOIN attachment_url z ON z.transaction_id = t1.transaction_id"
     }else{
       params_select =[user_name];
       query_cmd_select =
-      "SELECT b.transaction_id, b.order_date, b.payment_proof_uploaded_date, b.order_confirmed_date, b.delivery_date, b.transaction_done_date, b.state, " +
+      "SELECT  t1.*, z.url from (SELECT b.transaction_id, b.order_date, b.payment_proof_uploaded_date, b.order_confirmed_date, b.delivery_date, b.transaction_done_date, b.state, " +
       "a.price, a.quantity, "+
       "c.product_id, c.name "+
       "FROM transaction_detail a, transaction_history b, product c, apbi_user d "+
@@ -441,8 +441,9 @@ var product_service = {
       "AND d.user_id = b.user_id "+
       "AND a.product_id = c.product_id "+
       "AND d.user_id = ? "+
-      "ORDER BY b.order_date ASC;"
+      "ORDER BY b.order_date ASC) t1 LEFT JOIN attachment_url z ON z.transaction_id = t1.transaction_id;"
     }
+    console.log(mysql.format(query_cmd_select, params_select));
     query(mysql.format(query_cmd_select, params_select)).then(function(transactions){
       var trans = new Array();
       for(let i=0; i<transactions.length; i++){
@@ -473,6 +474,9 @@ var product_service = {
               transaction_list.order_confirmed_date = transactions[i].order_confirmed_date;
               transaction_list.delivery_date = transactions[i].delivery_date;
               transaction_list.transaction_done_date = transactions[i].transaction_done_date;
+              if(transactions[i].url != null){
+                transaction_list.payment = "/api/images/payment/"+transactions[i].url;
+              }
               let status = "";
               switch(parseInt(transactions[i].state)){
                 case 0: status = config.order_status.canceled; break;
