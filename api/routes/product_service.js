@@ -16,7 +16,7 @@ var product_service = {
       var file_number = 1;
       var storage = multer.diskStorage({
         destination: function(req, file, callback){
-          callback(null, './static/images');
+          callback(null, './static/product_images');
         },
         filename: function(req, file, callback){
           callback(null, result[0].prd_id + "_" + file_number+path.extname(file.originalname));
@@ -236,7 +236,7 @@ var product_service = {
     var images = [];
     query(mysql.format(query_cmd_select, params_select)).then(function(images_data){
       for(let j=0; j<images_data.length; j++){
-        images[j] = "/images/"+images_data[j].url;
+        images[j] = "/product_images/"+images_data[j].url;
       }
       result(images);
     });
