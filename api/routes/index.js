@@ -10,7 +10,7 @@ var forum_service = require('./forum_service');
 //favicon.ico request
 router.get('/favicon.ico', function(req, res) {
     res.status(204);
-    // to do: enhance
+    // to do: enhance to display website icon
     //res.status(config.http_code.ok);
     //res.res.sendFile('../favicon.png');
 });

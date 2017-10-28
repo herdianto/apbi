@@ -38,21 +38,66 @@ var forum_service = {
         if(result == "success"){
           res.status(config.http_code.ok);
           res.json({
-                  "status": config.http_code.ok,
-                  "message": "Successfully Inserted"
-                });
+            "status": config.http_code.ok,
+            "message": "Successfully Inserted"
+          });
         }else{
           res.status(config.http_code.in_server_err);
           res.json({
-                  "status": config.http_code.in_server_err,
-                  "message": "Internal Server Error"
-                });
+            "status": config.http_code.in_server_err,
+            "message": "Internal Server Error"
+          });
         }
       }
     );
   },
   update_thread: function(req, res){
-    res.json("update thread");
+    let data = req.body;
+    let current_time = new Date();
+    let user_name = jwt.decode(data.token, config.jwt_signature).user;
+    waterfall([
+      function check_authorization(isAuth){
+        let select_param = [data.id];
+        let query_cmd_select = "SELECT posted_by from forum WHERE forum_id = ? limit 1";
+        query(mysql.format(query_cmd_select, select_param)).then(function(res){
+          if(res[0].posted_by == user_name) isAuth(null, true);
+          else isAuth(null, false);
+        })
+      },
+      function updateThread(isAuth){
+        if(isAuth){
+          let query_cmd_update = "UPDATE forum SET title = ?, last_update_date = ?, last_update_by = ?, status = ? WHERE forum_id = ?";
+          let params_update =[data.title, current_time, user_name, data.status, data.id];
+          query(mysql.format(query_cmd_update, params_update)).then(function(result){
+            if(result.affectedRows > 0){
+              res.status(config.http_code.ok);
+              res.json({
+                "status": config.http_code.ok,
+                "message": "Successfully Updated"
+              });
+            }else{
+              res.status(config.http_code.ok);
+              res.json({
+                "status": config.http_code.ok,
+                "message": "Nothing updated"
+              });
+            }
+          }).catch(function(error){
+            res.status(config.http_code.in_server_err);
+            res.json({
+              "status": config.http_code.in_server_err,
+              "message": "Internal Server Error"
+            });
+          });
+        }else{
+          res.status(config.http_code.unauthorized);
+          res.json({
+            "status": config.http_code.unauthorized,
+            "message": "Not authorized"
+          });
+        }
+      }
+    ]);
   },
   add_comment: function(req, res){
     res.json("add comment");
@@ -61,6 +106,24 @@ var forum_service = {
     res.json("delete comment");
   },
   view_thread: function(req, res){
+    let body = req.body;
+    let query = req.query;
+    let current_time = new Date();
+    let user_name = jwt.decode(req.headers['x-token'], config.jwt_signature).user;
+    waterfall([
+      function getAllThread(threads){
+        let query_cmd_select = "SELECT forum_id, title, content, posted_date, posted_by, last_update_by, last_update_date "+
+        "FROM forum "+
+        "WHERE DATE(posted_date) BETWEEN ? AND ? AND posted_by LIKE ?";
+        let posted_by = ((query.posted_by == "") ? "%" : query.posted_by);
+        let params_select =[query.posted_date_from, query.posted_date_to, posted_by];
+        query(mysql.format(query_cmd_select, params_select)).then(function(data){
+
+        }).catch(function(error){
+          
+        });
+    }]);
+    
     res.json("view thread");
   }
 };

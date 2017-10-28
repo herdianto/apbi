@@ -443,7 +443,6 @@ var product_service = {
       "AND d.user_id = ? "+
       "ORDER BY b.order_date ASC) t1 LEFT JOIN attachment_url z ON z.transaction_id = t1.transaction_id;"
     }
-    console.log(mysql.format(query_cmd_select, params_select));
     query(mysql.format(query_cmd_select, params_select)).then(function(transactions){
       var trans = new Array();
       for(let i=0; i<transactions.length; i++){
