@@ -107,7 +107,7 @@ var forum_service = {
   },
   view_thread: function(req, res){
     let body = req.body;
-    let query = req.query;
+    let qry = req.query;
     let current_time = new Date();
     let user_name = jwt.decode(req.headers['x-token'], config.jwt_signature).user;
     waterfall([
@@ -115,16 +115,31 @@ var forum_service = {
         let query_cmd_select = "SELECT forum_id, title, content, posted_date, posted_by, last_update_by, last_update_date "+
         "FROM forum "+
         "WHERE DATE(posted_date) BETWEEN ? AND ? AND posted_by LIKE ?";
-        let posted_by = ((query.posted_by == "") ? "%" : query.posted_by);
-        let params_select =[query.posted_date_from, query.posted_date_to, posted_by];
+        let posted_by = ((qry.posted_by == "") ? "%" : qry.posted_by);
+        let params_select =[qry.posted_date_from, qry.posted_date_to, posted_by];
+        let forums = [];
         query(mysql.format(query_cmd_select, params_select)).then(function(data){
-
+          res.status(config.http_code.ok);
+          for(let i=0; i<data.length; i++){
+            let forum = {};
+            forum.id = data[i].forum_id;
+            forum.title = data[i].title;
+            forum.content = data[i].content;
+            forum.posted_date = data[i].posted_date;
+            forum.posted_by = data[i].posted_by;
+            forum.last_update_by = data[i].last_update_by;
+            forum.last_update_date = data[i].last_update_date;
+            forums[i]=forum;
+          }
+          res.json(forums);
         }).catch(function(error){
-          
+          res.status(config.http_code.in_server_err);
+          res.json({
+            "status": config.http_code.in_server_err,
+            "message": "Internal Server Error"
+          });
         });
     }]);
-    
-    res.json("view thread");
   }
 };
  
