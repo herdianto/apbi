@@ -1,0 +1,2 @@
+CREATE PROCEDURE delete_token(id varchar(30))
+   SELECT * from user_token

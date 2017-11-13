@@ -3,6 +3,7 @@ var mysql = require('mysql');
 var moment = require('moment');
 var user_service = require('./user_service.js');
 var config = require('../config/config.json');
+var query = require('../helper/db_connection');
 
 var auth = {
     renew_token: function(req, res){
@@ -70,8 +71,18 @@ var auth = {
             if (dbUserObj) {
                 // If authentication is success, we will generate a token
                 // and dispatch it to the client
+
+                let login_response = genToken(dbUserObj);
+                // insert token to DB
+                let current_time = new Date();
+                let device_id = req.body.device_id;
+                let query_cmd_insert = "INSERT INTO user_token (user_id, device_id, token, last_update) values (?,?,?,?)";
+                let params_insert = [dbUserObj.id, device_id, login_response.token, current_time];
+                query(mysql.format(query_cmd_insert, params_insert));
+
+                //send response
                 res.status(200);
-                res.json(genToken(dbUserObj));
+                res.json(login_response);                
             }
         });
     }
