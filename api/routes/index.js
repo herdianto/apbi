@@ -23,6 +23,7 @@ router.get('/forget_action', user_service.apply_password);
 router.post('/api/refresh_token', auth.renew_token);
 router.post('/api/update_profile', user_service.update_profile);
 router.post('/api/admin/member_approval', user_service.set_member_status);
+router.post('/api/display_profile', user_service.display_profile);
  
 //product service
 router.get('/api/product/search', product_service.search);

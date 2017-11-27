@@ -1,3 +1,5 @@
+var multer = require('multer');
+var path = require('path');
 var mysql = require('mysql');
 var query = require('../helper/db_connection');
 var email_service = require('../helper/email_connection');
@@ -169,9 +171,33 @@ var user_service = {
     },
     update_profile: function(req, res){
       try{
-        let decoded = jwt.decode(req.body.token, config.jwt_signature);
-        let params=req.body;
-        if(decoded.user == params.user_id){
+        let decoded = jwt.decode(req.headers["x-token"], config.jwt_signature);
+        var storage = multer.diskStorage({
+        destination: function(req, file, callback){
+          callback(null, './static/profile_images');
+        },
+        filename: function(req, file, callback){
+          console.log(decoded.user +"  "+req.body.user_id);
+          if(decoded.user == req.body.user_id){
+            callback(null, req.body.user_id+path.extname(file.originalname));
+          }else{
+            callback(null, null);
+          }
+        }
+        });
+        var upload = multer({storage: storage}).array('prof_pic', 1); //max can upload 1 photo
+        upload(req, res, function(err){
+        if(err){
+          console.log("error: "+error);
+          res.status(config.http_code.in_server_err);
+          res.json({
+            "status": config.http_code.in_server_err,
+            "message": "Upload Failed"
+          });
+        }
+        else{
+          if(decoded.user == params.user_id){
+          let params=req.body;
           let params_update = [params.name, params.address, params.email, params.password, params.deliv_addr, params.account_no, params.bank_name, decoded.user];
           let query_update = 'UPDATE apbi_user set name=?, address=?, email=?, password=md5(?), delivery_addr=?, account_no=?, bank_name=? ' +
           'WHERE user_id = ?';
@@ -198,14 +224,15 @@ var user_service = {
               "message": "Unauthorized"
           });
         }
+        }});
       }catch(error){
         console.log("error: "+error);
         res.status(config.http_code.in_server_err);
         res.json({
-            "status": config.http_code.in_server_err,
-            "message": "Internal Server Error"
+          "status": config.http_code.in_server_err,
+          "message": "Internal Server Error"
         });
-      }
+      }  
     },
     set_member_status: function(req, res){
       let params=req.body;
@@ -243,6 +270,47 @@ var user_service = {
             "message": "Internal Server Error"
         });
       });
+    },
+    display_profile: function(req, res){
+      let params=req.body;
+      let decoded = jwt.decode(params.token, config.jwt_signature);
+      if(params.user_id == decoded.user){
+        let params_select = [params.user_id];
+        let query_cmd = "SELECT user_id, name, email, address, role, delivery_addr, account_no, bank_name, user_status, prof_pic FROM apbi_user where user_id = ?";
+        query(mysql.format(query_cmd, params_select))
+        .then(function(result){
+          let profile = new Object();
+          for(let i=0; i<result.length; i++){
+            profile.name = result[i].name;
+            profile.email = result[i].email;
+            profile.address = result[i].address;
+            profile.role =  result[i].role;
+            profile.delivery_addr =  result[i].delivery_addr;
+            profile.account_no =  result[i].account_no;
+            profile.bank_name =  result[i].bank_name;
+            profile.user_status =  result[i].user_status;
+            profile.picture = result[i].prof_pic;
+          }
+          res.status(config.http_code.ok);
+          res.json(profile);
+        })
+        .catch(function(error){
+          console.log("error: "+error);
+          res.status(config.http_code.in_server_err);
+          res.json({
+            "status": config.http_code.in_server_err,
+            "message": "Internal Server Error"
+          });
+        });
+      }else{
+        res.status(config.http_code.unauthorized);
+        res.json({
+          "status": config.http_code.unauthorized,
+          "message": "Unauthorized"
+        });
+      }
+      let query_update = 'UPDATE apbi_user set role = ? where user_id = ?'
+      console.log("test");
     }
 };
 module.exports = user_service;

@@ -36,7 +36,7 @@ var product_service = {
         else{
           let params = req.body;
           let headers = req.headers;
-          let token = headers['x-token']
+          let token = headers['x-token'];
           let decoded = jwt.decode(token, config.jwt_signature);
           let current_time = new Date();
           let params_insert = [result[0].prd_id, params.name, params.description, params.member_price, params.non_member_price, current_time, decoded.user];
