@@ -24,9 +24,24 @@ var auth = {
                         "id": decoded.user,
                         "role": decoded.role
                     }
-                    res.status(config.http_code.ok);
-                    res.json(genToken(dbUserObj));
-                    return;
+                    //here
+                    let current_time = new Date();
+                    let return_val = genToken(dbUserObj);
+                    let params_update = [return_val.token, current_time, req.body.token];
+                    let query_cmd_update = "UPDATE user_token SET token = ?, last_update = ? WHERE token = ? "
+                    query(mysql.format(query_cmd_update, params_update)).then(function(result){
+                        if(result.affectedRows > 0){
+                            res.status(config.http_code.ok);
+                            res.json(return_val);
+                            return;
+                        }else{
+                            res.status(config.http_code.unauthorized);
+                            res.json({
+                                "status": config.http_code.unauthorized,
+                                "message": "Token Expired"
+                            });
+                        }
+                    });
                 }
             }
             catch(error){
@@ -76,8 +91,11 @@ var auth = {
                 // insert token to DB
                 let current_time = new Date();
                 let device_id = req.body.device_id;
-                let query_cmd_insert = "INSERT INTO user_token (user_id, device_id, token, last_update) values (?,?,?,?)";
+                let params_delete = [dbUserObj.id, device_id];
+                let query_cmd_delete = "DELETE FROM user_token WHERE user_id=? AND device_id=?"
+                query(mysql.format(query_cmd_delete, params_delete));
                 let params_insert = [dbUserObj.id, device_id, login_response.token, current_time];
+                let query_cmd_insert = "INSERT INTO user_token (user_id, device_id, token, last_update) values (?,?,?,?)";
                 query(mysql.format(query_cmd_insert, params_insert));
 
                 //send response

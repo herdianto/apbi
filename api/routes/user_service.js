@@ -310,8 +310,6 @@ var user_service = {
           "message": "Unauthorized"
         });
       }
-      let query_update = 'UPDATE apbi_user set role = ? where user_id = ?'
-      console.log("test");
     }
 };
 module.exports = user_service;
