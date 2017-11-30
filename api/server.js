@@ -28,6 +28,7 @@ app.all('/api/*', [require('./middlewares/validateRequest')]);
 // to serve static images and create virtual directory
 app.use('/product_images', express.static('static/product_images/'));
 app.use('/api/images/payment', express.static('static/payment_images/'));
+app.use('/api/images/user', express.static('static/profile_images/'));
 // API Routes
 app.use('/', require('./routes/index'));
  

@@ -171,15 +171,16 @@ var user_service = {
     },
     update_profile: function(req, res){
       try{
+        let prof_pic = '';
         let decoded = jwt.decode(req.headers["x-token"], config.jwt_signature);
         var storage = multer.diskStorage({
         destination: function(req, file, callback){
           callback(null, './static/profile_images');
         },
         filename: function(req, file, callback){
-          console.log(decoded.user +"  "+req.body.user_id);
           if(decoded.user == req.body.user_id){
-            callback(null, req.body.user_id+path.extname(file.originalname));
+            prof_pic = req.body.user_id+path.extname(file.originalname);
+            callback(null, prof_pic);
           }else{
             callback(null, null);
           }
@@ -188,7 +189,7 @@ var user_service = {
         var upload = multer({storage: storage}).array('prof_pic', 1); //max can upload 1 photo
         upload(req, res, function(err){
         if(err){
-          console.log("error: "+error);
+          console.log("error: "+err);
           res.status(config.http_code.in_server_err);
           res.json({
             "status": config.http_code.in_server_err,
@@ -196,34 +197,34 @@ var user_service = {
           });
         }
         else{
-          if(decoded.user == params.user_id){
           let params=req.body;
-          let params_update = [params.name, params.address, params.email, params.password, params.deliv_addr, params.account_no, params.bank_name, decoded.user];
-          let query_update = 'UPDATE apbi_user set name=?, address=?, email=?, password=md5(?), delivery_addr=?, account_no=?, bank_name=? ' +
-          'WHERE user_id = ?';
-          query(mysql.format(query_update, params_update))
-          .then(function(result){
-            res.status(config.http_code.ok);
-            res.json({
-              "status": config.http_code.ok,
-              "message": "Successfully Updated"
+          if(decoded.user == params.user_id){
+            let params_update = [prof_pic, params.name, params.address, params.email, params.password, params.deliv_addr, params.account_no, params.bank_name, decoded.user];
+            let query_update = 'UPDATE apbi_user set prof_pic=?, name=?, address=?, email=?, password=md5(?), delivery_addr=?, account_no=?, bank_name=? ' +
+            'WHERE user_id = ?';
+            query(mysql.format(query_update, params_update))
+            .then(function(result){
+              res.status(config.http_code.ok);
+              res.json({
+                "status": config.http_code.ok,
+                "message": "Successfully Updated"
+              });
+            })
+            .catch(function(error){
+              console.log("error: "+error);
+              res.status(config.http_code.in_server_err);
+              res.json({
+                  "status": config.http_code.in_server_err,
+                  "message": "Internal Server Error"
+              });
             });
-          })
-          .catch(function(error){
-            console.log("error: "+error);
-            res.status(config.http_code.in_server_err);
+          }else{
+            res.status(config.http_code.unauthorized);
             res.json({
-                "status": config.http_code.in_server_err,
-                "message": "Internal Server Error"
+                "status": config.http_code.unauthorized,
+                "message": "Unauthorized"
             });
-          });
-        }else{
-          res.status(config.http_code.unauthorized);
-          res.json({
-              "status": config.http_code.unauthorized,
-              "message": "Unauthorized"
-          });
-        }
+          }
         }});
       }catch(error){
         console.log("error: "+error);
@@ -289,7 +290,7 @@ var user_service = {
             profile.account_no =  result[i].account_no;
             profile.bank_name =  result[i].bank_name;
             profile.user_status =  result[i].user_status;
-            profile.picture = result[i].prof_pic;
+            profile.picture = "/api/images/user/"+result[i].prof_pic;
           }
           res.status(config.http_code.ok);
           res.json(profile);
