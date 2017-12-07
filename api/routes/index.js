@@ -6,6 +6,8 @@ var auth = require('./auth_service');
 var user_service = require('./user_service');
 var product_service = require('./product_service');
 var forum_service = require('./forum_service');
+var about_service = require('./about_service');
+var news_service = require('./news_service');
 
 //favicon.ico request
 router.get('/favicon.ico', function(req, res) {
@@ -24,6 +26,18 @@ router.post('/api/refresh_token', auth.renew_token);
 router.post('/api/update_profile', user_service.update_profile);
 router.post('/api/admin/member_approval', user_service.set_member_status);
 router.post('/api/display_profile', user_service.display_profile);
+
+//about servie
+router.post('/api/admin/about/post_about', about_service.post_about);
+router.get('/about/get_about', about_service.get_about);
+router.get('/about/api/admin/get_about', about_service.get_about_admin);
+router.post('/api/admin/about/edit_about', about_service.edit_about);
+
+//news servie
+router.post('/api/admin/news/post_news', news_service.post_news);
+router.get('/news/get_news', news_service.get_news);
+router.get('/about/api/admin/get_news', news_service.get_news_admin);
+router.post('/api/admin/news/edit_news', news_service.edit_news);
  
 //product service
 router.get('/api/product/search', product_service.search);
