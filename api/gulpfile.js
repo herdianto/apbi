@@ -19,6 +19,15 @@ gulp.task('server', function() {
   });
 })
 
+gulp.task('copy_dev', function () {
+  gulp.src('./config/dev/config.json')
+      .pipe(gulp.dest('./config'));
+});
+
+gulp.task('copy_prod', function () {
+  gulp.src('./config/prod/config.json')
+      .pipe(gulp.dest('./config/'));
+});
 /**
  * $ gulp
  * description: start the development environment
@@ -38,4 +47,29 @@ gulp.task('default', function() {
 // clean up if an error goes unhandled.
 process.on('exit', function() {
     if (node) node.kill()
+})
+
+
+gulp.task('run_dev', function() {
+  gulp.run('server')
+  gulp.run('copy_dev')
+  gulp.watch(['./helper/*.js', './routes/*.js', './middlewares/*.js', './model/*.js'], function() {
+    gulp.run('server')
+  })
+  
+  // Need to watch for sass changes too? Just add another watch call!
+  // no more messing around with grunt-concurrent or the like. Gulp is
+  // async by default.
+})
+
+gulp.task('run_prod', function() {
+  gulp.run('server')
+  gulp.run('copy_prod')
+  gulp.watch(['./helper/*.js', './routes/*.js', './middlewares/*.js', './model/*.js'], function() {
+    gulp.run('server')
+  })
+  
+  // Need to watch for sass changes too? Just add another watch call!
+  // no more messing around with grunt-concurrent or the like. Gulp is
+  // async by default.
 })
