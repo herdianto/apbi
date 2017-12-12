@@ -41,6 +41,7 @@ router.post('/api/admin/news/edit_news', news_service.edit_news);
  
 //product service
 router.get('/api/product/search', product_service.search);
+router.get('/api/product/get_product_list/:page', product_service.get_product_list);
 router.post('/api/product/buy', product_service.buy);
 router.get('/api/product/detail/:prod_id', product_service.get_product_detail);
 router.get('/api/admin/product/get_transaction', product_service.get_transaction);

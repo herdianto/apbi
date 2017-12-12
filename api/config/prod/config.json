@@ -25,5 +25,8 @@
         "confirmed": "Order Confirmed",
         "delivery": "Order is being delivered",
         "completed": "Order completed"
+    },
+    "select_limit":{
+        "product": 15
     }
 }

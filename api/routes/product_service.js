@@ -500,20 +500,87 @@ var product_service = {
     let prod_images = new Array();
     let product = new Object();
     let params_select =[req.params.prod_id];
-    query_cmd_select = "SELECT product.product_id, url "+
-    "FROM product, attachment_url WHERE product.product_id = attachment_url.product_id AND product.product_id = ?;";
-    console.log(mysql.format(query_cmd_select, params_select));
+    query_cmd_select = "SELECT t1.*, z.url FROM "
+    +"(SELECT product_id, name, description, member_price, non_member_price, posted_date, posted_by, last_update_date, last_update_by from product where product_id = ?) t1 "
+    +"LEFT JOIN attachment_url z ON z.product_id = t1.product_id";
     query(mysql.format(query_cmd_select, params_select)).then(function(result){
         for(let i=0; i<result.length; i++){
           if(i==0){
-            product.id = result[0].product_id;
+            product.id = result[i].product_id;
+            product.description = result[i].description;
+            product.name = result[i].name;
+            product.member_price = result[i].member_price;
+            product.non_member_price = result[i].non_member_price;
+            product.posted_date = result[i].posted_date;
+            product.posted_by = result[i].posted_by;
+            product.last_update_date = result[i].last_update_date;
+            product.last_update_by = result[i].last_update_by;
           }
-          if(result[i].url.length>0){
+          if(result[i].hasOwnProperty('url') && result[i].url != null){
             prod_images[i] = "/product_images/"+result[i].url;
           }
         }
         product.images = prod_images;
         res.json(product);
+      }
+    );
+  },
+  get_product_list: function(req, res){
+    let obats = new Array();
+    let images = new Array();
+    let obat = new Object();
+    waterfall([
+      function getMasterProduct(callback){
+        let limit = config.select_limit.product;
+        let page_number = req.params.page;
+        let params_select =[(page_number-1)*limit, limit];
+        let query_cmd_select = "SELECT * FROM product LIMIT ?,?;"
+        query(mysql.format(query_cmd_select, params_select)).
+          then(function(result){
+            for(let i=0; i<result.length; i++){
+              obat = {
+                product_id: result[i].product_id,
+                name: result[i].name,
+                description: result[i].description,
+                member_price: result[i].member_price,
+                non_member_price: result[i].non_member_price,
+                posted_date: result[i].posted_date,
+                posted_by: result[i].posted_by,
+                last_update_date: result[i].last_update_date,
+                last_update_by: result[i].last_update_by,
+                product_images:images 
+              };
+              obats[i]=obat;
+            }
+            callback(null, obats);
+          })
+      },
+      function getProductImages(obats, result){
+        if(obats.length > 0){
+          var counter = 0;
+          for(let i=0; i<obats.length; i++){
+            let query_cmd_select = "SELECT product_id, url FROM attachment_url WHERE product_id = ?;"
+            let params_select = [obats[i].product_id];
+            product_service.get_single_images(params_select,function(x){
+              obats[i].product_images = x;
+              data();
+            });
+          }
+          function data(){
+            counter++;
+            if(counter == obats.length){
+              result(null, obats);
+            }
+          }
+        }else{
+          let obat = new Array();
+          result(null, obat);
+        }
+      }
+    ], 
+      function (err, result){
+        res.status(config.http_code.ok);
+        res.json(result);
       }
     );
   }
