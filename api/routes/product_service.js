@@ -495,6 +495,27 @@ var product_service = {
       }
       res.json(transaction_lists);
     });
+  },
+  get_product_detail: function(req, res){
+    let prod_images = new Array();
+    let product = new Object();
+    let params_select =[req.params.prod_id];
+    query_cmd_select = "SELECT product.product_id, url "+
+    "FROM product, attachment_url WHERE product.product_id = attachment_url.product_id AND product.product_id = ?;";
+    console.log(mysql.format(query_cmd_select, params_select));
+    query(mysql.format(query_cmd_select, params_select)).then(function(result){
+        for(let i=0; i<result.length; i++){
+          if(i==0){
+            product.id = result[0].product_id;
+          }
+          if(result[i].url.length>0){
+            prod_images[i] = "/product_images/"+result[i].url;
+          }
+        }
+        product.images = prod_images;
+        res.json(product);
+      }
+    );
   }
 };
  

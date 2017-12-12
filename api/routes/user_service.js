@@ -283,6 +283,7 @@ var user_service = {
         query(mysql.format(query_cmd, params_select))
         .then(function(result){
           let profile = new Object();
+          let prof_pic = "";
           for(let i=0; i<result.length; i++){
             profile.name = result[i].name;
             profile.email = result[i].email;
@@ -292,7 +293,10 @@ var user_service = {
             profile.account_no =  result[i].account_no;
             profile.bank_name =  result[i].bank_name;
             profile.user_status =  result[i].user_status;
-            profile.picture = "/api/images/user/"+result[i].prof_pic;
+            if(result[i].prof_pic != "" && result[i].prof_pic != null){
+              prof_pic = "/api/images/user/"+result[i].prof_pic;
+            }
+            profile.picture = prof_pic;
           }
           res.status(config.http_code.ok);
           res.json(profile);
