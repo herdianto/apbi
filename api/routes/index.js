@@ -38,6 +38,7 @@ router.post('/api/admin/news/post_news', news_service.post_news);
 router.get('/news/get_news', news_service.get_news);
 router.get('/about/api/admin/get_news', news_service.get_news_admin);
 router.post('/api/admin/news/edit_news', news_service.edit_news);
+router.get('/news/search', news_service.search_news);
  
 //product service
 router.get('/api/product/search', product_service.search);

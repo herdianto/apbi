@@ -128,6 +128,46 @@ var news_service = {
   },
   get_news_admin: function(req, res){
     //to be implemented if needed
+  },
+  search_news: function(req, res){
+    let news_s = new Array();
+    let news = new Object();
+    waterfall([
+      function getNews(callback){
+        let params_select =['%'+req.query.keyword+'%', '%'+req.query.keyword+'%'];
+        let query_cmd_select = "SELECT * FROM news WHERE (title LIKE ? OR content LIKE ?) AND status ='active';"
+        query(mysql.format(query_cmd_select, params_select)).
+          then(function(result){
+            for(let i=0; i<result.length; i++){
+              news = {
+                news_id: result[i].news_id,
+                title: result[i].title,
+                content: result[i].content,
+                posted_date: result[i].posted_date,
+                posted_by: result[i].posted_by,
+                last_update_date: result[i].last_update_date,
+                last_update_by: result[i].last_update_by,
+                status:result[i].status 
+              };
+              news_s[i]=news;
+            }
+            callback(null, news_s);
+          })
+          .catch(function(error){
+            console.log("error: "+ error);
+            res.status(config.http_code.in_server_err);
+            res.json({
+              "status": config.http_code.in_server_err,
+              "message": "Internal Server Error"
+            });
+          });
+      }
+    ], 
+      function (err, news_s){
+        res.status(config.http_code.ok);
+        res.json(news_s);
+      }
+    );
   }
 };
  
