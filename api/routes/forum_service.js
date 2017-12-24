@@ -55,12 +55,13 @@ var forum_service = {
     let data = req.body;
     let current_time = new Date();
     let user_name = jwt.decode(data.token, config.jwt_signature).user;
+    let role = jwt.decode(data.token, config.jwt_signature).role;
     waterfall([
       function check_authorization(isAuth){
         let select_param = [data.id];
         let query_cmd_select = "SELECT posted_by from forum WHERE forum_id = ? limit 1";
         query(mysql.format(query_cmd_select, select_param)).then(function(res){
-          if(res[0].posted_by == user_name) isAuth(null, true);
+          if(res[0].posted_by == user_name || role == 'admin') isAuth(null, true);
           else isAuth(null, false);
         })
       },
@@ -221,13 +222,16 @@ var forum_service = {
     let qry = req.query;
     let current_time = new Date();
     let user_name = jwt.decode(req.headers['x-token'], config.jwt_signature).user;
+    let limit = config.select_limit.thread;
     waterfall([
       function getAllThread(threads){
         let query_cmd_select = "SELECT t1.*, t2.content as a, t2.user_id as b, t2.posted_date as c, t2.interaction_id as d FROM (SELECT forum_id, title, content, posted_date, posted_by, last_update_by, last_update_date "+
         "FROM forum "+
-        "WHERE DATE(posted_date) BETWEEN ? AND ? AND posted_by LIKE ?) t1 LEFT JOIN forum_interaction t2 ON t2.forum_id = t1.forum_id ORDER BY t1.forum_id";
+        "WHERE DATE(posted_date) BETWEEN ? AND ? AND posted_by LIKE ? AND status='active' ORDER BY CONCAT('forumID_',ifnull((CAST(SUBSTRING(forum_id,9,30) as UNSIGNED)),0)) DESC limit ?,?) t1 LEFT JOIN forum_interaction t2 ON t2.forum_id = t1.forum_id";
+        let page = qry.page;
+        if (page < 1) page = 1; 
         let posted_by = ((qry.posted_by == "") ? "%" : qry.posted_by);
-        let params_select =[qry.posted_date_from, qry.posted_date_to, posted_by];
+        let params_select =[qry.posted_date_from, qry.posted_date_to, posted_by, (page-1)*limit, limit];
         let forums = [];
         let forum_ids = [];
         let forum_id= [];
@@ -265,6 +269,40 @@ var forum_service = {
           }
           res.status(config.http_code.ok);
           res.json(forums);
+        }).catch(function(error){
+          console.log("error: "+error);
+          res.status(config.http_code.in_server_err);
+          res.json({
+            "status": config.http_code.in_server_err,
+            "message": "Internal Server Error"
+          });
+        });
+    }]);
+  },
+  get_comment: function(req, res){
+    let body = req.body;
+    let qry = req.query;
+    let current_time = new Date();
+    let user_name = jwt.decode(req.headers['x-token'], config.jwt_signature).user;
+    waterfall([
+      function getAllThread(threads){
+        let query_cmd_select = "SELECT interaction_id, user_id, content, posted_date, content FROM forum_interaction WHERE forum_id=? ORDER BY interaction_id DESC Limit ?,?";
+        let thread_id = qry.thread_id;
+        let page = qry.page;
+        let limit = config.select_limit.comment;
+        let params_select =[thread_id, (page-1)*limit, limit];
+        let comments = new Array();
+        query(mysql.format(query_cmd_select, params_select)).then(function(data){
+            for(let j=0; j<data.length; j++){
+                let comment = new Object();  
+                comment.id = data[j].interaction_id;
+                comment.posted_by = data[j].user_id;
+                comment.posted_data = data[j].posted_date;
+                comment.content = data[j].content;
+                comments[j]=comment;
+            }
+          res.status(config.http_code.ok);
+          res.json(comments);
         }).catch(function(error){
           console.log("error: "+error);
           res.status(config.http_code.in_server_err);

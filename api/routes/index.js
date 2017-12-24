@@ -59,5 +59,6 @@ router.post('/api/forum/update_thread', forum_service.update_thread);
 router.post('/api/forum/add_comment', forum_service.add_comment);
 router.post('/api/forum/delete_comment', forum_service.delete_comment);
 router.get('/api/forum/view_thread', forum_service.view_thread);
+router.get('/api/forum/get_comment', forum_service.get_comment);
 
 module.exports = router;
