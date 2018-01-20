@@ -419,6 +419,8 @@ var product_service = {
     let y=0;
     let x=0;
     let params_select, query_cmd_select;
+    let page_number = req.params.page;
+    let limit = config.select_limit.transaction;
     if(role == "admin"){
       params_select =[];
       query_cmd_select =
@@ -429,7 +431,7 @@ var product_service = {
       "WHERE a.transaction_id = b.transaction_id "+
       "AND d.user_id = b.user_id "+
       "AND a.product_id = c.product_id "+
-      "ORDER BY b.order_date ASC) t1 LEFT JOIN attachment_url z ON z.transaction_id = t1.transaction_id"
+      "ORDER BY b.order_date DESC) t1 LEFT JOIN attachment_url z ON z.transaction_id = t1.transaction_id ORDER BY order_date DESC;"
     }else{
       params_select =[user_name];
       query_cmd_select =
@@ -441,8 +443,9 @@ var product_service = {
       "AND d.user_id = b.user_id "+
       "AND a.product_id = c.product_id "+
       "AND d.user_id = ? "+
-      "ORDER BY b.order_date ASC) t1 LEFT JOIN attachment_url z ON z.transaction_id = t1.transaction_id;"
+      ") t1 LEFT JOIN attachment_url z ON z.transaction_id = t1.transaction_id ORDER BY order_date DESC;"
     }
+    console.log(mysql.format(query_cmd_select, params_select));
     query(mysql.format(query_cmd_select, params_select)).then(function(transactions){
       var trans = new Array();
       for(let i=0; i<transactions.length; i++){
@@ -493,7 +496,21 @@ var product_service = {
         transaction_list.product = products;
         transaction_lists[h] = transaction_list;
       }
-      res.json(transaction_lists);
+      let transaction_lists2 = new Array();
+      let frm = (page_number-1)*limit;
+      let to = frm + limit;
+      if(to>transaction_lists.length){
+        to = transaction_lists.length;
+      }
+      console.log("from: "+frm +" to: "+to);
+      let counter = 0;
+      for(let i=frm; i<to; i++){
+        let transaction_list2 =  new Object();
+        transaction_list2 = transaction_lists[i];
+        transaction_lists2[counter] = transaction_list2;
+        counter++; 
+      }
+      res.json(transaction_lists2);
     });
   },
   get_product_detail: function(req, res){
