@@ -23,12 +23,12 @@ var forum_service = {
           callback(null, './static/forum_images');
         },
         filename: function(req, file, callback){
-          if(decoded.user == req.body.user_id){
+          //if(decoded.user == req.body.user_id){
             pic = id+path.extname(file.originalname);
             callback(null, pic);
-          }else{
-            callback(null, null);
-          }
+          //}else{
+          //  callback(null, null);
+          //}
         }
         });
         var upload = multer({storage: storage}).array('forum_pic', 1); //max can upload 1 photo
@@ -296,7 +296,7 @@ var forum_service = {
       function getAllThread(threads){
         let query_cmd_select = "SELECT t1.*, t2.content as a, t2.user_id as b, t2.posted_date as c, t2.interaction_id as d FROM (SELECT forum_id, title, content, posted_date, posted_by, last_update_by, last_update_date "+
         "FROM forum "+
-        "WHERE DATE(posted_date) BETWEEN ? AND ? AND posted_by LIKE ? AND status='active' ORDER BY CONCAT('forumID_',ifnull((CAST(SUBSTRING(forum_id,9,30) as UNSIGNED)),0)) DESC limit ?,?) t1 LEFT JOIN forum_interaction t2 ON t2.forum_id = t1.forum_id";
+        "WHERE DATE(posted_date) BETWEEN ? AND ? AND posted_by LIKE ? AND status='active' ORDER BY posted_date DESC limit ?,?) t1 LEFT JOIN forum_interaction t2 ON t2.forum_id = t1.forum_id";
         let page = qry.page;
         if (page < 1) page = 1; 
         let posted_by = ((qry.posted_by == "") ? "%" : qry.posted_by);
@@ -304,6 +304,7 @@ var forum_service = {
         let forums = [];
         let forum_ids = [];
         let forum_id= [];
+        console.log(mysql.format(query_cmd_select, params_select));
         query(mysql.format(query_cmd_select, params_select)).then(function(data){
           for(let i=0; i<data.length; i++){
             forum_ids[i] = data[i].forum_id;
