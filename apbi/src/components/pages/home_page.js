@@ -9,7 +9,7 @@
 
 // Import Libraries
 import React, { Component } from 'react';
-import { AppRegistry, Text, Image, Linking, Dimensions, ScrollView, AppState, Platform } from 'react-native';
+import { AppRegistry, Text, Image, Linking, Dimensions, ScrollView, AppState, Platform, AsyncStorage } from 'react-native';
 import { Content, Card, CardItem, Body, Left, Thumbnail, Button, Icon, Container } from 'native-base';
 import HTMLView from 'react-native-htmlview';
 import TimeAgo from 'react-native-timeago';
@@ -18,34 +18,11 @@ import { Actions, ActionConst } from 'react-native-router-flux';
 import FileSystem from 'react-native-filesystem';
 
 // Import My Own Libraries
-import { hello, getImage, contentSnippet, ipAddress, portAddress } from '../../helpers/helpers';
+import { hello, getImage, contentSnippet, ipAddress, portAddress, ipPortAddress } from '../../helpers/helpers';
 
 // Import Components
 import AppHeader from '../appHeader';
 import AppFooter from '../appFooter';
-
-/*const buttonPlayList = [
-  {
-    buttonPlayID: 1,
-    buttonPlayTitle: '',
-    buttonPlayURL: () => {}
-  },
-  {
-    buttonPlayID: 2,
-    buttonPlayTitle: '',
-    buttonPlayURL: () => {}
-  },
-  {
-    buttonPlayID: 3,
-    buttonPlayTitle: '',
-    buttonPlayURL: () => {}
-  },
-  {
-    buttonPlayID: 4,
-    buttonPlayTitle: '',
-    buttonPlayURL: () => {}
-  }
-]*/
 
 // Button Action
 function buttonAction(button) {
@@ -77,8 +54,22 @@ export default class HomePage extends Component {
 			newsContentData: [],
 			orientation: isPortrait() ? 'portrait' : 'landscape',
 			appState: AppState.currentState,
-			usernameLogin: ''
+			usernameLogin: '',
+			currentCount: 3,
+			usernameSession: '',
+			tokenSession: ''
 		}
+
+		// AsyncStorage - Save Data to Session Storage
+		AsyncStorage.getItem('usernameTokenSession', (error, result) => {
+          	if (result) {
+              	let resultParsed = JSON.parse(result)
+              	this.setState({
+                	usernameSession: resultParsed.usernameSession,
+                  	tokenSession: resultParsed.tokenSession
+              	});
+          	}
+	    });
 
 		// Event Listener for orientation changes
 	    Dimensions.addEventListener('change', () => {
@@ -95,16 +86,32 @@ export default class HomePage extends Component {
 	    });
 	}
 
-	async componentDidMount() {
-		//this.getData();
+	componentDidMount() {
+		this.getNewsContent(); // Get News Content
+	}
 
-		const fileTokenExists = await FileSystem.fileExists('tokenFile.txt');
-        const fileUsernameExists = await FileSystem.fileExists('usernameFile.txt');
+	// Unmount the variable
+	componentWillUnmount() {
+		// When a component unmounts, these timers have to be cleared and
+	    // so that you are not left with zombie timers doing things when you did not expect them to be there.
+	    clearInterval(this._interval);
+	}
 
-        // Check token if file exists
-        if (fileTokenExists == true && fileUsernameExists == true) {
-            this.checkToken();
-        }
+	// Set time count from 3 2 1
+	timerMine() {
+	    var newCount = this.state.currentCount - 1;
+
+	    if (newCount >= 0) {
+	      this.setState({
+	        currentCount: newCount
+	      })
+
+	      if (newCount == 0) {
+	      	this.checkToken(); // Check Token
+	      }
+	    } else {
+	      clearInterval(this._interval);
+	    }
 	}
 
 	getData() {
@@ -131,76 +138,9 @@ export default class HomePage extends Component {
     	//response.text()
 	}
 
-	// Write Token File
-	async writeTokenFile(tokenValue, usernameValue) {
-	    const tokenValueContents = tokenValue;
-	    const usernameValueContents = usernameValue;
-
-	    await FileSystem.writeToFile('tokenFile.txt', tokenValueContents.toString());
-	    await FileSystem.writeToFile('usernameFile.txt', usernameValueContents.toString());
-	    
-	    //await FileSystem.writeToFile('tokenFile.txt', fileContents.toString(), FileSystem.storage.important); //exclude file from the backup
-	    //alert('file is written');
-	}
-
-	// Check Token
-    async checkToken() {
-    	const tokenValueContents = await FileSystem.readFile('tokenFile.txt');
-    	const usernameValueContents = await FileSystem.readFile('usernameFile.txt');
-
-		return fetch('http://' + ipAddress() + ':' + portAddress() + '/api/refresh_token', {
-		  method: 'POST',
-		  headers: {
-		    'Accept': 'application/json',
-		    'Content-Type': 'application/json',
-		  },
-		  body: JSON.stringify({
-		    token: tokenValueContents,
-		  })
-		})
-		.then((response) => response.json())
-    	.then((responseJson) => {
-    		//alert(JSON.stringify(responseJson));
-
-    		//this.setState({loginMessage: responseJson.message}); // Get the data from API
-
-    		if (responseJson.message == "Successful") {
-    			//alert("Successful");
-
-    			this.writeTokenFile(responseJson.token, responseJson.profile.user_id); // write token to file
-
-    			//Actions.tabbar({type:ActionConst.RESET});
-
-    			//Actions.tabbar({usernameLogin: usernameValueContents});
-    			//Actions.home({usernameLogin: usernameValueContents});
-    			//Actions.home_page({usernameLogin: usernameValueContents}); // go to Home Page directly without Login
-
-    			this.setState({
-		            //usernameLogin: usernameValueContents
-		            usernameLogin: responseJson.profile.user_id
-		        });
-
-		        this.getNewsContent(); // Get News Content
-    		} else if (responseJson.message == "Token is no longer valid") {
-    			alert(responseJson.message);
-
-    			Actions.login_page({type:ActionConst.RESET}); // go to Login Page
-    		} else {
-    			alert("Please Login");
-
-    			Actions.login_page({type:ActionConst.RESET}); // go to Login Page
-    		}
-    	})
-    	.catch((error) => {
-    		//console.error(error);
-    		
-    		alert(error);
-    	});
-	}
-
 	// Get News Content
     getNewsContent() {
-    	return fetch('http://' + ipAddress() + ':' + portAddress() + '/news/get_news', {
+    	return fetch(ipPortAddress() + '/news/get_news', {
         	method: 'GET',
         	headers: {
             	'Accept': 'application/json',
@@ -209,8 +149,6 @@ export default class HomePage extends Component {
       	})
     	.then((response) => response.json())
     	.then((responseJson) => {
-    		//alert(JSON.stringify(responseJson));
-
     		this.setState({newsContentData: [responseJson]}); // Get the data from API
     	})
     	.catch((error) => {
@@ -223,52 +161,7 @@ export default class HomePage extends Component {
 	// Get the data
 	render() {
 
-		// Display Array
-		/*let buttonPlayButtons = buttonPlayList.map(buttonPlayInfo => {
-	      return (
-	              <CardItem key={buttonPlayInfo.buttonPlayID}>
-	                <Button transparent style={{width: 340}}>
-			            <Text onPress={buttonPlayInfo.buttonPlayURL}>{buttonPlayInfo.buttonPlayTitle}</Text>
-			        </Button>
-	              </CardItem>
-	      )
-	    });*/
-
-	    // Display Single Value
-	    /*let buttonPlayButton = () => {
-	    	if (Platform.OS === 'ios') {
-		    	if (this.state.orientation == 'portrait') {
-		    		return (
-			    		<CardItem key={1}>
-			                <Text>Home Page</Text>
-			            </CardItem>
-			    	)
-		    	} else if (this.state.orientation == 'landscape') {
-		    		return (
-			    		<CardItem key={1}>
-			                <Text>Home Page</Text>
-			            </CardItem>
-			    	)
-		    	}
-	    	} else {
-	    		if (this.state.orientation == 'portrait') {
-		    		return (
-			    		<CardItem key={1}>
-			                <Text>Home Page</Text>
-			            </CardItem>
-			    	)
-		    	} else if (this.state.orientation == 'landscape') {
-		    		return (
-			    		<CardItem key={1}>
-			                <Text>Home Page</Text>
-			            </CardItem>
-			    	)
-		    	}
-	    	}
-	    	
-	    }*/
-
-	    let newsContentResult = this.state.newsContentData.map((newsContentDataDetail, index) => {
+		let newsContentResult = this.state.newsContentData.map((newsContentDataDetail, index) => {
 	    	var news_id = newsContentDataDetail.id;
 	    	var news_title = newsContentDataDetail.title;
 	    	var news_content = newsContentDataDetail.content;
@@ -301,11 +194,11 @@ export default class HomePage extends Component {
 			        		<Icon active name = "time" />
 			        		<Text style={{marginLeft: -5}}><TimeAgo time = {news_posted_date} /></Text>
 			        	
-			        		<Icon active name = "share" style={{marginLeft: 10}} />
+			        		{/*<Icon active name = "share" style={{marginLeft: 10}} />
 			        		<Text style={{marginLeft: -10}}>{news_posted_by} Shares</Text>
 			        	
 			        		<Icon active name = "happy" style={{marginLeft: 10}} />
-			        		<Text style={{marginLeft: -5}}>{news_posted_by} Likes</Text>
+			        		<Text style={{marginLeft: -5}}>{news_posted_by} Likes</Text>*/}
 			        	
 		        	</CardItem>
 		        </Card>
@@ -322,9 +215,11 @@ export default class HomePage extends Component {
 		      
 			        	<Content>
 
-		            		{/*<Text>Welcome {this.state.usernameLogin}</Text>*/}
+		            		<Text>Welcome {this.state.tokenSession}</Text>
 
 		            		{newsContentResult}
+
+		            		{/*<Text>{this.state.currentCount}</Text>*/}
 						
 						</Content>
 

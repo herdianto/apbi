@@ -19,7 +19,7 @@ import FileSystem from 'react-native-filesystem';
 //import HideableView from 'react-native-hideable-view';
 
 // Import My Own Libraries
-import { hello, getImage, contentSnippet, ipAddress, portAddress } from '../../helpers/helpers';
+import { hello, getImage, contentSnippet, ipAddress, portAddress, ipPortAddress } from '../../helpers/helpers';
 
 // Import Themes
 import getTheme from '../../themes/components';
@@ -122,7 +122,7 @@ export default class ForgotPasswordPage extends Component {
     	const tokenValueContents = await FileSystem.readFile('tokenFile.txt');
     	const usernameValueContents = await FileSystem.readFile('usernameFile.txt');
 
-		return fetch('http://' + ipAddress() + ':' + portAddress() + '/api/refresh_token', {
+		return fetch(ipPortAddress() + '/api/refresh_token', {
 		  method: 'POST',
 		  headers: {
 		    'Accept': 'application/json',
@@ -165,7 +165,7 @@ export default class ForgotPasswordPage extends Component {
 
     // Get Forgot Password Response
     getForgotPasswordResponse(usernameValue) {
-		return fetch('http://' + ipAddress() + ':' + portAddress() + '/forget', {
+		return fetch(ipPortAddress() + '/forget', {
 		  method: 'POST',
 		  headers: {
 		    'Accept': 'application/json',
@@ -239,7 +239,7 @@ export default class ForgotPasswordPage extends Component {
 
 		        <Container>
 
-		        	<Content contentContainerStyle={{flex: 1, backgroundColor: '#233F4A'}}>
+		        	<View style={{flex: 1, backgroundColor: '#233F4A'}}>
 		        		<View style={{justifyContent: 'center', alignItems: 'center', marginTop: 80, top: 20}}>
 		        			<Image source={require('../../logo/apbi_logo.png')} style={{width: 150, height: 150}} />
 		        		</View>
@@ -279,8 +279,8 @@ export default class ForgotPasswordPage extends Component {
 					        <Text style={{color: '#fff'}}>{this.state.errorMessage}</Text>
 				        </View>
 
-						{this.myKeyboardSpacer()}
-		        	</Content>
+						{/*this.myKeyboardSpacer()*/}
+		        	</View>
 
 		        </Container>
 

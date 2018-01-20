@@ -19,7 +19,7 @@ import FileSystem from 'react-native-filesystem';
 //import HideableView from 'react-native-hideable-view';
 
 // Import My Own Libraries
-import { hello, getImage, contentSnippet, ipAddress, portAddress } from '../../helpers/helpers';
+import { hello, getImage, contentSnippet, ipAddress, portAddress, ipPortAddress } from '../../helpers/helpers';
 
 // Import Themes
 import getTheme from '../../themes/components';
@@ -51,7 +51,10 @@ export default class RegisterPage extends Component {
 			emailValue: "",
 			nameValue: "",
 			errorMessage: "",
-			registerMessage: ""
+			registerMessage: "",
+			fixedMarginTop: 0,
+			fixedHeightImage: 0,
+			fixedWidthImage: 0
 		}
 
 		// Event Listener for orientation changes
@@ -81,6 +84,26 @@ export default class RegisterPage extends Component {
 		if (fileTokenExists == true && fileUsernameExists == true) {
 			this.checkToken();
 		}*/
+
+		// Get Screen Height to Make it Fixed
+		const dim = Dimensions.get('screen');
+		const fixedHeight = dim.height;
+
+		if (fixedHeight > 0 && fixedHeight <= 534) {
+			var fixedMarginTopFinal = 20;
+			var fixedHeightImageFinal = 50;
+			var fixedWidthImageFinal = 50;
+		} else {
+			var fixedMarginTopFinal = 40;
+			var fixedHeightImageFinal = 150;
+			var fixedWidthImageFinal = 150;
+		}
+
+		this.setState({
+			fixedMarginTop: fixedMarginTopFinal, // Set Margin Top
+			fixedHeightImage: fixedWidthImageFinal, // Set Height Image
+			fixedWidthImage: fixedWidthImageFinal // Set Width Image
+		});
 	}
 
 	// Write Token File
@@ -125,7 +148,7 @@ export default class RegisterPage extends Component {
     	const tokenValueContents = await FileSystem.readFile('tokenFile.txt');
     	const usernameValueContents = await FileSystem.readFile('usernameFile.txt');
 
-		return fetch('http://' + ipAddress() + ':' + portAddress() + '/api/refresh_token', {
+		return fetch(ipPortAddress() + '/api/refresh_token', {
 		  method: 'POST',
 		  headers: {
 		    'Accept': 'application/json',
@@ -177,7 +200,7 @@ export default class RegisterPage extends Component {
 
     // Get Register Response
     getRegisterResponse(usernameValue, passwordValue, emailValue, nameValue) {
-		return fetch('http://' + ipAddress() + ':' + portAddress() + '/register', {
+		return fetch(ipPortAddress() + '/register', {
 		  method: 'POST',
 		  headers: {
 		    'Accept': 'application/json',
@@ -287,9 +310,9 @@ export default class RegisterPage extends Component {
 
 		        <Container>
 
-		        	<Content contentContainerStyle={{flex: 1, backgroundColor: '#233F4A'}}>
-		        		<View style={{justifyContent: 'center', alignItems: 'center', marginTop: 20, top: 20}}>
-		        			<Image source={require('../../logo/apbi_logo.png')} style={{width: 150, height: 150}} />
+		        	<View style={{flex: 1, backgroundColor: '#233F4A'}}>
+		        		<View style={{justifyContent: 'center', alignItems: 'center', marginTop: this.state.fixedMarginTop}}>
+		        			<Image source={require('../../logo/apbi_logo.png')} style={{width: this.state.fixedWidthImage, height: this.state.fixedHeightImage}} />
 		        		</View>
 
 		        		<Form>
@@ -378,7 +401,7 @@ export default class RegisterPage extends Component {
 				            </Item>
 				        </Form>
 
-				        <View style={{justifyContent: 'center', alignItems: 'center', marginTop: 20}}>
+				        <View style={{justifyContent: 'center', alignItems: 'center'}}>
 			                <CardItem key={1} style={{backgroundColor: '#233F4A'}}>
 				                <Button block light style={{width: 250, marginTop: 10}} onPress={() => {this.registerAction(this.state.usernameValue, this.state.passwordValue, this.state.emailValue, this.state.nameValue)}}>
 						            <Text>Register</Text>
@@ -390,8 +413,8 @@ export default class RegisterPage extends Component {
 					        <Text style={{color: '#fff'}}>{this.state.errorMessage}</Text>
 				        </View>
 
-						{this.myKeyboardSpacer()}
-		        	</Content>
+						{/*this.myKeyboardSpacer()*/}
+		        	</View>
 
 		        </Container>
 

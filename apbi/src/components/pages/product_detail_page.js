@@ -9,51 +9,20 @@
 
 // Import Libraries
 import React, { Component } from 'react';
-import { AppRegistry, Text, Image, Linking, Dimensions, ScrollView, AppState, Platform } from 'react-native';
-import { Content, Card, CardItem, Body, Left, Thumbnail, Button, Icon, Container, Grid, Col, Row, List, ListItem, Item, Input, Label } from 'native-base';
+import { AppRegistry, Text, Image, Linking, Dimensions, ScrollView, AppState, Platform, View, AsyncStorage } from 'react-native';
+import { Content, Card, CardItem, Body, Left, Thumbnail, Button, Icon, Container, Grid, Col, Row, List, ListItem, Item, Input, Label, Footer, FooterTab } from 'native-base';
 import TimeAgo from 'react-native-timeago';
 import FitImage from 'react-native-fit-image';
 import { Actions, ActionConst } from 'react-native-router-flux';
+import KeyboardSpacer from 'react-native-keyboard-spacer';
 import FileSystem from 'react-native-filesystem';
 
 // Import My Own Libraries
-import { hello, getImage, contentSnippet, ipAddress, portAddress } from '../../helpers/helpers';
+import { hello, getImage, contentSnippet, ipAddress, portAddress, ipPortAddress } from '../../helpers/helpers';
 
 // Import Components
 import AppHeader from '../appHeader';
 import AppFooter from '../appFooter';
-
-/*const buttonPlayList = [
-  {
-    buttonPlayID: 1,
-    buttonPlayTitle: '',
-    buttonPlayURL: () => {}
-  },
-  {
-    buttonPlayID: 2,
-    buttonPlayTitle: '',
-    buttonPlayURL: () => {}
-  },
-  {
-    buttonPlayID: 3,
-    buttonPlayTitle: '',
-    buttonPlayURL: () => {}
-  },
-  {
-    buttonPlayID: 4,
-    buttonPlayTitle: '',
-    buttonPlayURL: () => {}
-  }
-]*/
-
-//const cartList = [{}]; // Define List Cart - Object in Object
-
-//const cartList = []; // Define List Cart - Use this
-
-/*const medicine = {
-    product_id: 'prd_1',
-    quantity: 10
-}*/
 
 // Button Action
 function buttonAction(button) {
@@ -87,8 +56,23 @@ export default class ProductDetailPage extends Component {
 			orientation: isPortrait() ? 'portrait' : 'landscape',
 			appState: AppState.currentState,
 			usernameLogin: '',
-			quantityProductValue: ''
+			quantityProductValue: '',
+			isFocused: false,
+			productDetailData: [],
+			usernameSession: '',
+			tokenSession: ''
 		}
+
+		// AsyncStorage - Save Data to Session Storage
+		AsyncStorage.getItem('usernameTokenSession', (error, result) => {
+          	if (result) {
+              	let resultParsed = JSON.parse(result)
+              	this.setState({
+                	usernameSession: resultParsed.usernameSession,
+                  	tokenSession: resultParsed.tokenSession
+              	});
+          	}
+	    });
 
 		// Event Listener for orientation changes
 	    Dimensions.addEventListener('change', () => {
@@ -105,17 +89,8 @@ export default class ProductDetailPage extends Component {
 	    });
 	}
 
-	async componentDidMount() {
-		//this.getData();
-
-		const fileTokenExists = await FileSystem.fileExists('tokenFile.txt');
-        const fileUsernameExists = await FileSystem.fileExists('usernameFile.txt');
-
-        // Check token if file exists
-        if (fileTokenExists == true && fileUsernameExists == true) {
-            this.checkToken();
-        }
-
+	componentDidMount() {
+		// Modify Left and Right Button
         Actions.refresh({
         	title: this.props.product_name,
         	renderBackButton: this.renderLeftButton,
@@ -125,71 +100,42 @@ export default class ProductDetailPage extends Component {
         this.setState({cartList: this.props.cartList ? this.props.cartList : []});
 
 		//alert(JSON.stringify(this.state.cartList));
+
+		this.getProductDetail(this.props.productID); // Get Product Detail Content
 	}
 
-	// Write Token File
-	async writeTokenFile(tokenValue, usernameValue) {
-	    const tokenValueContents = tokenValue;
-	    const usernameValueContents = usernameValue;
+	// Get Product Detail
+    getProductDetail(productID) {
+    	// AsyncStorage - Save Data to Session Storage
+		AsyncStorage.getItem('usernameTokenSession', (error, result) => {
+		    if (result) {
+		        let resultParsed = JSON.parse(result);
+		        let tokenSession = resultParsed.tokenSession;
+		        
+		        return fetch(ipPortAddress() + '/api/product/detail/' + productID, {
+		        	method: 'GET',
+		        	headers: {
+		            	'Accept': 'application/json',
+		            	'Content-Type': 'application/json',
+		            	'x-token': tokenSession
+		          }
+		      	})
+		    	.then((response) => response.json())
+		    	.then((responseJson) => {
+		    		//alert(JSON.stringify(responseJson));
 
-	    await FileSystem.writeToFile('tokenFile.txt', tokenValueContents.toString());
-	    await FileSystem.writeToFile('usernameFile.txt', usernameValueContents.toString());
-	    
-	    //await FileSystem.writeToFile('tokenFile.txt', fileContents.toString(), FileSystem.storage.important); //exclude file from the backup
-	    //alert('file is written');
-	}
-
-	// Check Token
-    async checkToken() {
-    	const tokenValueContents = await FileSystem.readFile('tokenFile.txt');
-    	const usernameValueContents = await FileSystem.readFile('usernameFile.txt');
-
-		return fetch('http://' + ipAddress() + ':' + portAddress() + '/api/refresh_token', {
-		  method: 'POST',
-		  headers: {
-		    'Accept': 'application/json',
-		    'Content-Type': 'application/json',
-		  },
-		  body: JSON.stringify({
-		    token: tokenValueContents,
-		  })
-		})
-		.then((response) => response.json())
-    	.then((responseJson) => {
-    		//alert(JSON.stringify(responseJson));
-
-    		//this.setState({loginMessage: responseJson.message}); // Get the data from API
-
-    		if (responseJson.message == "Successful") {
-    			//alert("Successful");
-
-    			this.writeTokenFile(responseJson.token, responseJson.profile.user_id); // write token to file
-
-    			//Actions.tabbar({type:ActionConst.RESET});
-
-    			//Actions.tabbar({usernameLogin: usernameValueContents});
-    			//Actions.home({usernameLogin: usernameValueContents});
-    			//Actions.home_page({usernameLogin: usernameValueContents}); // go to Home Page directly without Login
-
-    			this.setState({
-		            //usernameLogin: usernameValueContents
-		            usernameLogin: responseJson.profile.user_id
-		        });
-    		} else if (responseJson.message == "Token is no longer valid") {
-    			alert(responseJson.message);
-
-    			Actions.login_page({type:ActionConst.RESET}); // go to Login Page
-    		} else {
-    			alert("Please Login");
-
-    			Actions.login_page({type:ActionConst.RESET}); // go to Login Page
-    		}
-    	})
-    	.catch((error) => {
-    		//console.error(error);
-    		
-    		alert(error);
-    	});
+		    		this.setState({
+		    			productDetailData: [responseJson],
+		    			//newTotalPostForum: responseJson.length // total post
+		    		}); // Get the data from API
+		    	})
+		    	.catch((error) => {
+		    		//console.error(error);
+		    		
+		    		alert(error);
+		    	});
+		    }
+		});
 	}
 
 	// Render Left Button
@@ -208,7 +154,7 @@ export default class ProductDetailPage extends Component {
 
 	// Back Button
 	backButton() {
-		Actions.product_page({cartList: this.state.cartList});
+		Actions.product_page({cartList: this.state.cartList, type:ActionConst.RESET});
 	}
 
 	// Go to Cart
@@ -268,53 +214,80 @@ export default class ProductDetailPage extends Component {
 		}
 	}
 
+	// Handle Input Focus To Check If Input Is Focused
+	handleInputFocus = () => {
+		this.setState({ isFocused: true })
+	}
+
 	// Get the data
 	render() {
 
-		// Display Array
-		/*let buttonPlayButtons = buttonPlayList.map(buttonPlayInfo => {
-	      return (
-	              <CardItem key={buttonPlayInfo.buttonPlayID}>
-	                <Button transparent style={{width: 340}}>
-			            <Text onPress={buttonPlayInfo.buttonPlayURL}>{buttonPlayInfo.buttonPlayTitle}</Text>
-			        </Button>
-	              </CardItem>
-	      )
-	    });*/
+    	let productDetailDataResult = this.state.productDetailData.map((productDetailData, index) => {
 
-	    // Display Single Value
-	    /*let buttonPlayButton = () => {
-	    	if (Platform.OS === 'ios') {
-		    	if (this.state.orientation == 'portrait') {
-		    		return (
-			    		<CardItem key={1}>
-			                <Text>About Page</Text>
-			            </CardItem>
-			    	)
-		    	} else if (this.state.orientation == 'landscape') {
-		    		return (
-			    		<CardItem key={1}>
-			                <Text>About Page</Text>
-			            </CardItem>
-			    	)
-		    	}
-	    	} else {
-	    		if (this.state.orientation == 'portrait') {
-		    		return (
-			    		<CardItem key={1}>
-			                <Text>About Page</Text>
-			            </CardItem>
-			    	)
-		    	} else if (this.state.orientation == 'landscape') {
-		    		return (
-			    		<CardItem key={1}>
-			                <Text>About Page</Text>
-			            </CardItem>
-			    	)
-		    	}
-	    	}
-	    	
-	    }*/
+			//alert(JSON.stringify(this.state.searchProductData[0]));
+
+			var product_id = productDetailData.id;
+			var product_name = productDetailData.name;
+			var product_description = productDetailData.description;
+			var product_member_price = productDetailData.member_price;
+			var product_non_member_price = productDetailData.non_member_price;
+			var product_posted_date = productDetailData.posted_date;
+			var product_posted_by = productDetailData.posted_by;
+			var product_last_update_date = productDetailData.last_update_date;
+			var product_last_update_by = productDetailData.last_update_by;
+			var product_images = productDetailData.images;
+
+			return(
+				<View key={product_id}>
+					<Grid>
+	        			<Col style={{ backgroundColor: '#233F4A', height: 200, justifyContent: 'center', alignItems: 'center' }}>
+				            	<Image source={require('../../logo/profile_picture.png')} style={{width: 150, height: 150}} />
+				        </Col>
+			        </Grid>
+
+			        <List>
+			            <ListItem style={{justifyContent: 'space-between'}}>
+			              <Text>Product Name</Text>
+			              <Text>{product_name}</Text>
+			            </ListItem>
+
+			            <ListItem style={{justifyContent: 'space-between'}}>
+			              <Text>Price</Text>
+			              <Text>{product_member_price}</Text>
+			            </ListItem>
+
+			            <ListItem>
+			              <Item floatingLabel>
+			              	<Label style={{color: '#000', fontSize: 14}}>Quantity</Label>
+				            	<Input
+			                    	style={{color: '#000', textAlign: 'right'}}
+			                    	onChangeText={(text) => this.setState({quantityProductValue: text})}
+			                    	value={this.state.quantityProductValue}
+			                    	keyboardType={'numeric'}
+			                    	secureTextEntry={false}
+			                    	maxLength={20}
+			                    	returnKeyType={'search'}
+			                    	placeholder={'0'}
+			                    	enablesReturnKeyAutomatically={true}
+			                    	selectionColor={'#000'}
+			                    	placeholderTextColor={'#000'}
+			                    	underlineColorAndroid={'transparent'}
+			                    	/*ref="quantityProductTxt"*/
+			                    	getRef={(input) => { this.quantityProductTxt = input; }}
+			                    	onKeyPress={this.handleKeyDownQuantityProduct.bind(this)}
+			                    	onFocus={this.handleInputFocus}
+			                    />
+		                    </Item>
+			            </ListItem>
+			        </List>
+		        </View>
+			)
+			
+		});
+
+		var product_id = this.state.productDetailData[0] ? this.state.productDetailData[0].id : '';
+		var product_name = this.state.productDetailData[0] ? this.state.productDetailData[0].name : '';
+		var product_member_price = this.state.productDetailData[0] ? this.state.productDetailData[0].member_price : ''
 
 	    return (
 
@@ -328,58 +301,29 @@ export default class ProductDetailPage extends Component {
 
 		            		{/*buttonPlayButton()*/}
 
-		            		<Grid>
-		            			<Col style={{ backgroundColor: '#233F4A', height: 200, justifyContent: 'center', alignItems: 'center' }}>
-						            	<Image source={require('../../logo/profile_picture.png')} style={{width: 150, height: 150}} />
-						        </Col>
-					        </Grid>
+		            		{productDetailDataResult}
 
-					        <List>
-					            <ListItem style={{justifyContent: 'space-between'}}>
-					              <Text>Product Name</Text>
-					              <Text>{this.props.product_name}</Text>
-					            </ListItem>
-
-					            <ListItem style={{justifyContent: 'space-between'}}>
-					              <Text>Price</Text>
-					              <Text>{this.props.product_member_price}</Text>
-					            </ListItem>
-
-					            <ListItem>
-					              <Item floatingLabel>
-					              	<Label style={{color: '#000', fontSize: 14}}>Quantity</Label>
-						            	<Input
-					                    	style={{color: '#000', textAlign: 'right'}}
-					                    	onChangeText={(text) => this.setState({quantityProductValue: text})}
-					                    	value={this.state.quantityProductValue}
-					                    	keyboardType={'numeric'}
-					                    	secureTextEntry={false}
-					                    	maxLength={20}
-					                    	returnKeyType={'search'}
-					                    	placeholder={'0'}
-					                    	enablesReturnKeyAutomatically={true}
-					                    	selectionColor={'#000'}
-					                    	placeholderTextColor={'#000'}
-					                    	underlineColorAndroid={'transparent'}
-					                    	/*ref="quantityProductTxt"*/
-					                    	getRef={(input) => { this.quantityProductTxt = input; }}
-					                    	onKeyPress={this.handleKeyDownQuantityProduct.bind(this)}
-					                    />
-				                    </Item>
-					            </ListItem>
-					            
-					            <ListItem style={{justifyContent: 'center'}}>
-					              	<Button block light style={{width: 250}} onPress={() => {this.orderProductAction(this.props.product_id, this.props.product_name, this.props.product_member_price, this.state.quantityProductValue)}}>
-							            <Text>Order</Text>
-							        </Button>
-					            </ListItem>
-					        </List>
+		            		<Text>{this.state.tokenSession}</Text>
 						
 						</Content>
 
 		            </ScrollView>
 
-		        
+			        <Footer style={{backgroundColor: '#eee'}}>
+						<FooterTab>
+		    				<Button onPress={() => {this.orderProductAction(product_id, product_name, product_member_price, this.state.quantityProductValue)}}>
+					            <Text>Order</Text>
+					        </Button>
+		    			</FooterTab>
+	    			</Footer>
+
+	    			<Footer>
+						<FooterTab>
+		    				
+		    			</FooterTab>
+	    			</Footer>
+
+	    			{/*this.myKeyboardSpacer()*/}
 
             </Container>
 	        

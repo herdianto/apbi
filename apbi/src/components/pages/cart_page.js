@@ -9,42 +9,19 @@
 
 // Import Libraries
 import React, { Component } from 'react';
-import { AppRegistry, Text, Image, Linking, Dimensions, ScrollView, AppState, Platform } from 'react-native';
-import { Content, Card, CardItem, Body, Left, Thumbnail, Button, Icon, Container, Grid, Col, Row } from 'native-base';
+import { AppRegistry, Text, Image, Linking, Dimensions, ScrollView, AppState, Platform, View, AsyncStorage } from 'react-native';
+import { Content, Card, CardItem, Body, Left, Thumbnail, Button, Icon, Container, Grid, Col, Row, Footer, FooterTab } from 'native-base';
 import TimeAgo from 'react-native-timeago';
 import FitImage from 'react-native-fit-image';
 import { Actions, ActionConst } from 'react-native-router-flux';
 import FileSystem from 'react-native-filesystem';
 
 // Import My Own Libraries
-import { hello, getImage, contentSnippet, ipAddress, portAddress } from '../../helpers/helpers';
+import { hello, getImage, contentSnippet, ipAddress, portAddress, ipPortAddress } from '../../helpers/helpers';
 
 // Import Components
 import AppHeader from '../appHeader';
 import AppFooter from '../appFooter';
-
-/*const buttonPlayList = [
-  {
-    buttonPlayID: 1,
-    buttonPlayTitle: '',
-    buttonPlayURL: () => {}
-  },
-  {
-    buttonPlayID: 2,
-    buttonPlayTitle: '',
-    buttonPlayURL: () => {}
-  },
-  {
-    buttonPlayID: 3,
-    buttonPlayTitle: '',
-    buttonPlayURL: () => {}
-  },
-  {
-    buttonPlayID: 4,
-    buttonPlayTitle: '',
-    buttonPlayURL: () => {}
-  }
-]*/
 
 // Button Action
 function buttonAction(button) {
@@ -78,8 +55,21 @@ export default class CartPage extends Component {
 			newCartList: [],
 			orientation: isPortrait() ? 'portrait' : 'landscape',
 			appState: AppState.currentState,
-			usernameLogin: ''
+			usernameLogin: '',
+			usernameSession: '',
+			tokenSession: ''
 		}
+
+		// AsyncStorage - Save Data to Session Storage
+		AsyncStorage.getItem('usernameTokenSession', (error, result) => {
+          	if (result) {
+              	let resultParsed = JSON.parse(result)
+              	this.setState({
+                	usernameSession: resultParsed.usernameSession,
+                  	tokenSession: resultParsed.tokenSession
+              	});
+          	}
+	    });
 
 		// Event Listener for orientation changes
 	    Dimensions.addEventListener('change', () => {
@@ -96,125 +86,54 @@ export default class CartPage extends Component {
 	    });
 	}
 
-	async componentDidMount() {
-		//this.getData();
-
-		const fileTokenExists = await FileSystem.fileExists('tokenFile.txt');
-        const fileUsernameExists = await FileSystem.fileExists('usernameFile.txt');
-
-        // Check token if file exists
-        if (fileTokenExists == true && fileUsernameExists == true) {
-            this.checkToken();
-        }
-
-        this.setState({cartList: this.props.cartList});
+	componentDidMount() {
+		this.setState({cartList: this.props.cartList});
 
         for(var i = 0; i < this.props.cartList.length; i++) {
 			this.state.newCartList.push({product_id: this.props.cartList[i].product_id, quantity: this.props.cartList[i].quantity}); // Insert product
 		}
 	}
 
-	// Write Token File
-	async writeTokenFile(tokenValue, usernameValue) {
-	    const tokenValueContents = tokenValue;
-	    const usernameValueContents = usernameValue;
-
-	    await FileSystem.writeToFile('tokenFile.txt', tokenValueContents.toString());
-	    await FileSystem.writeToFile('usernameFile.txt', usernameValueContents.toString());
-	    
-	    //await FileSystem.writeToFile('tokenFile.txt', fileContents.toString(), FileSystem.storage.important); //exclude file from the backup
-	    //alert('file is written');
-	}
-
-	// Check Token
-    async checkToken() {
-    	const tokenValueContents = await FileSystem.readFile('tokenFile.txt');
-    	const usernameValueContents = await FileSystem.readFile('usernameFile.txt');
-
-		return fetch('http://' + ipAddress() + ':' + portAddress() + '/api/refresh_token', {
-		  method: 'POST',
-		  headers: {
-		    'Accept': 'application/json',
-		    'Content-Type': 'application/json',
-		  },
-		  body: JSON.stringify({
-		    token: tokenValueContents,
-		  })
-		})
-		.then((response) => response.json())
-    	.then((responseJson) => {
-    		//alert(JSON.stringify(responseJson));
-
-    		//this.setState({loginMessage: responseJson.message}); // Get the data from API
-
-    		if (responseJson.message == "Successful") {
-    			//alert("Successful");
-
-    			this.writeTokenFile(responseJson.token, responseJson.profile.user_id); // write token to file
-
-    			//Actions.tabbar({type:ActionConst.RESET});
-
-    			//Actions.tabbar({usernameLogin: usernameValueContents});
-    			//Actions.home({usernameLogin: usernameValueContents});
-    			//Actions.home_page({usernameLogin: usernameValueContents}); // go to Home Page directly without Login
-
-    			this.setState({
-		            //usernameLogin: usernameValueContents
-		            usernameLogin: responseJson.profile.user_id
-		        });
-    		} else if (responseJson.message == "Token is no longer valid") {
-    			alert(responseJson.message);
-
-    			Actions.login_page({type:ActionConst.RESET}); // go to Login Page
-    		} else {
-    			alert("Please Login");
-
-    			Actions.login_page({type:ActionConst.RESET}); // go to Login Page
-    		}
-    	})
-    	.catch((error) => {
-    		//console.error(error);
-    		
-    		alert(error);
-    	});
-	}
-
 	// Pay Order Product Action
-	async payOrderProductAction(product) {
-		//alert(JSON.stringify(product));
+	payOrderProductAction(product) {
+		// AsyncStorage - Save Data to Session Storage
+		AsyncStorage.getItem('usernameTokenSession', (error, result) => {
+		    if (result) {
+		        let resultParsed = JSON.parse(result);
+		        let tokenSession = resultParsed.tokenSession;
+		        
+		        return fetch(ipPortAddress() + '/api/product/buy', {
+				  method: 'POST',
+				  headers: {
+				    'Accept': 'application/json',
+				    'Content-Type': 'application/json',
+				  },
+				  body: JSON.stringify({
+				    product: product,
+				    token: tokenSession,
+				  })
+				})
+				.then((response) => response.json())
+		    	.then((responseJson) => {
+		    		//alert(JSON.stringify(responseJson));
 
-		const tokenValueContents = await FileSystem.readFile('tokenFile.txt');
+		    		//this.setState({loginMessage: responseJson.message}); // Get the data from API
 
-    	return fetch('http://' + ipAddress() + ':' + portAddress() + '/api/product/buy', {
-		  method: 'POST',
-		  headers: {
-		    'Accept': 'application/json',
-		    'Content-Type': 'application/json',
-		  },
-		  body: JSON.stringify({
-		    product: product,
-		    token: tokenValueContents,
-		  })
-		})
-		.then((response) => response.json())
-    	.then((responseJson) => {
-    		//alert(JSON.stringify(responseJson));
+		    		if (responseJson.message == "Successfully Bought") {
 
-    		//this.setState({loginMessage: responseJson.message}); // Get the data from API
+		    			alert(responseJson.message);
 
-    		if (responseJson.message == "Successfully Bought") {
-
-    			alert(responseJson.message);
-
-    			this.setState({cartList: [], newCartList: []});
-    			
-    		}
-    	})
-    	.catch((error) => {
-    		//console.error(error);
-    		
-    		alert(error);
-    	});
+		    			this.setState({cartList: [], newCartList: []});
+		    			
+		    		}
+		    	})
+		    	.catch((error) => {
+		    		//console.error(error);
+		    		
+		    		alert(error);
+		    	});
+		    }
+		});
     }
 
 	// Get the data
@@ -281,23 +200,37 @@ export default class CartPage extends Component {
     	let cartListPayButton = () => {
     		if (this.state.cartList == "") {
     			return (
-    				<Content>
+    				<View>
     					<Text>Tidak ada transaksi</Text>
-    				</Content>
+    				</View>
     			)
     		} else {
     			return (
-    				<Content>
+    				<View>
 	    				{cartListResult}
+			        </View>
+    			)
+    		}
+    	}
 
-	    				<Grid style={{justifyContent: 'center', marginTop: 10}}>
-				        	<Col>
-				        		<Button block light style={{width: 250}} onPress={() => {this.payOrderProductAction(this.state.newCartList)}}>
+    	let payNowButton = () => {
+    		if (this.state.cartList != "") {
+    			return (
+    				<View>
+	    				<Footer style={{backgroundColor: '#eee'}}>
+		    				<FooterTab>
+			    				<Button onPress={() => {this.payOrderProductAction(this.state.newCartList)}}>
 						            <Text>Pay Now</Text>
 						        </Button>
-				        	</Col>
-				        </Grid>
-			        </Content>
+			    			</FooterTab>
+		    			</Footer>
+
+		    			<Footer>
+		    				<FooterTab>
+			    				
+			    			</FooterTab>
+		    			</Footer>
+			        </View>
     			)
     		}
     	}
@@ -310,11 +243,17 @@ export default class CartPage extends Component {
 		
 					<ScrollView >
 
-			        	{cartListPayButton()}
+						<Content>
+
+			        		{cartListPayButton()}
+
+			        		<Text>{this.state.tokenSession}</Text>
+
+			        	</Content>
 		            
 		            </ScrollView>
 
-		        
+		        {payNowButton()}
 
             </Container>
 	        

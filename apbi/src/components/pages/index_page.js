@@ -9,7 +9,7 @@
 
 // Import Libraries
 import React, { Component } from 'react';
-import { AppRegistry, Text, Image, Linking, Dimensions, ScrollView, AppState, Platform, StyleSheet, View } from 'react-native';
+import { AppRegistry, Text, Image, Linking, Dimensions, ScrollView, AppState, Platform, StyleSheet, View, AsyncStorage } from 'react-native';
 import { Content, Card, CardItem, Body, Left, Thumbnail, Button, Icon, Container, StyleProvider } from 'native-base';
 import TimeAgo from 'react-native-timeago';
 import FitImage from 'react-native-fit-image';
@@ -17,7 +17,7 @@ import { Actions, ActionConst } from 'react-native-router-flux';
 import FileSystem from 'react-native-filesystem';
 
 // Import My Own Libraries
-import { hello, getImage, contentSnippet, ipAddress, portAddress } from '../../helpers/helpers';
+import { hello, getImage, contentSnippet, ipAddress, portAddress, ipPortAddress } from '../../helpers/helpers';
 
 // Import Themes
 import getTheme from '../../themes/components';
@@ -44,8 +44,21 @@ export default class IndexPage extends Component {
 			data: [],
 			orientation: isPortrait() ? 'portrait' : 'landscape',
 			appState: AppState.currentState,
-			currentCount: 1
+			currentCount: 1,
+			usernameSession: '',
+			tokenSession: ''
 		}
+
+		// AsyncStorage - Save Data to Session Storage
+		AsyncStorage.getItem('usernameTokenSession', (error, result) => {
+          	if (result) {
+              	let resultParsed = JSON.parse(result)
+              	this.setState({
+                	usernameSession: resultParsed.usernameSession,
+                  	tokenSession: resultParsed.tokenSession
+              	});
+          	}
+	    });
 
 		// Event Listener for orientation changes
 	    Dimensions.addEventListener('change', () => {
@@ -78,11 +91,8 @@ export default class IndexPage extends Component {
 	}
 
 	// Set time count from 3 2 1
-	async timerMine() {
+	timerMine() {
 	    var newCount = this.state.currentCount - 1;
-
-	    const fileTokenExists = await FileSystem.fileExists('tokenFile.txt');
-		const fileUsernameExists = await FileSystem.fileExists('usernameFile.txt');
 
 	    if (newCount >= 0) {
 	      this.setState({
@@ -90,92 +100,51 @@ export default class IndexPage extends Component {
 	      })
 
 	      if (newCount == 0) {
-	      	// Check token if file exists
-			if (fileTokenExists == true && fileUsernameExists == true) {
-				this.checkToken();
-			} else {
-				Actions.login_page({type:ActionConst.RESET}); // go to Login Page
-			}
-
-			//Actions.login_page({type:ActionConst.RESET});
+	      	this.checkToken(); // Check Token
 	      }
 	    } else {
 	      clearInterval(this._interval);
 	    }
 	}
 
-	// Write Token File
-	async writeTokenFile(tokenValue, usernameValue) {
-	    const tokenValueContents = tokenValue;
-	    const usernameValueContents = usernameValue;
+	// Save Data to Session Storage
+	saveDataSession(usernameValue, tokenValue) {
+	    let usernameSession = usernameValue;
+	    let tokenSession = tokenValue;
+	    let dataSession = {
+	        usernameSession: usernameSession,
+	        tokenSession: tokenSession
+	    }
 
-	    await FileSystem.writeToFile('tokenFile.txt', tokenValueContents.toString());
-	    await FileSystem.writeToFile('usernameFile.txt', usernameValueContents.toString());
-	    
-	    //await FileSystem.writeToFile('tokenFile.txt', fileContents.toString(), FileSystem.storage.important); //exclude file from the backup
-	    //alert('file is written');
-	}
-
-	// Read Token File
-	/*async readTokenFile() {
-	    const tokenValueContents = await FileSystem.readFile('tokenFile.txt');
-	    const usernameValueContents = await FileSystem.readFile('usernameFile.txt');
+	    AsyncStorage.setItem('usernameTokenSession', JSON.stringify(dataSession));
 
 	    this.setState({
-	      checkPlayingStatus: fileContents
-	    })
-
-	    const checkPath = await FileSystem.absolutePath('tokenFile.txt');
-	    
-	    alert(checkPath);
-	}*/
-
-	/*async checkIfFileExists() {
-		const fileTokenExists = await FileSystem.fileExists('tokenFile.txt');
-		const fileUsernameExists = await FileSystem.fileExists('usernameFile.txt');
-		const directoryExists = await FileSystem.directoryExists('my-directory/my-file.txt');
-		
-		console.log(`file exists: ${fileExists}`);
-		console.log(`directory exists: ${directoryExists}`);
-
-		alert(`file exists: ${fileTokenExists}`);
-	}*/
+	        usernameSession: usernameSession,
+	        tokenSession: tokenSession
+	    });
+	}
 
 	// Check Token
-    async checkToken() {
-    	const tokenValueContents = await FileSystem.readFile('tokenFile.txt');
-    	const usernameValueContents = await FileSystem.readFile('usernameFile.txt');
-
-    	if (tokenValueContents == "tokenLogout") {
-    		const tokenValueContents = "";
-    	}
-
-		return fetch('http://' + ipAddress() + ':' + portAddress() + '/api/refresh_token', {
+    checkToken() {
+    	return fetch(ipPortAddress() + '/api/refresh_token', {
 		  method: 'POST',
 		  headers: {
 		    'Accept': 'application/json',
 		    'Content-Type': 'application/json',
 		  },
 		  body: JSON.stringify({
-		    token: tokenValueContents,
+		    token: this.state.tokenSession,
 		  })
 		})
 		.then((response) => response.json())
     	.then((responseJson) => {
-    		//alert(JSON.stringify(responseJson));
-
-    		//this.setState({loginMessage: responseJson.message}); // Get the data from API
-
     		if (responseJson.message == "Successful") {
     			alert("Successful");
 
-    			this.writeTokenFile(responseJson.token, responseJson.profile.user_id); // write token to file
+    			this.saveDataSession(responseJson.profile.user_id, responseJson.token); // Save Data to Session Storage
 
-    			//Actions.tabbar({type:ActionConst.RESET});
-
-    			Actions.tabbar({usernameLogin: usernameValueContents});
-    			//Actions.home({usernameLogin: usernameValueContents});
-    			Actions.home_page({usernameLogin: usernameValueContents}); // go to Home Page directly without Login
+    			Actions.tabbar({usernameLogin: this.state.tokenSession});
+    			Actions.home_page({usernameLogin: this.state.tokenSession}); // go to Home Page directly without Login
     		} else if (responseJson.message == "Token is no longer valid") {
     			alert(responseJson.message);
 

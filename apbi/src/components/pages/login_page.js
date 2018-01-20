@@ -9,17 +9,20 @@
 
 // Import Libraries
 import React, { Component } from 'react';
-import { AppRegistry, Text, Image, Linking, Dimensions, ScrollView, AppState, Platform, StyleSheet, View, TextInput } from 'react-native';
+import { AppRegistry, Text, Image, Linking, Dimensions, ScrollView, AppState, Platform, StyleSheet, View, TextInput, AsyncStorage } from 'react-native';
 import { Content, Card, CardItem, Body, Left, Thumbnail, Button, Icon, Container, StyleProvider, Form, Item, Input, Label } from 'native-base';
 import TimeAgo from 'react-native-timeago';
 import FitImage from 'react-native-fit-image';
 import { Actions, ActionConst } from 'react-native-router-flux';
 import KeyboardSpacer from 'react-native-keyboard-spacer';
 import FileSystem from 'react-native-filesystem';
+import DeviceInfo from 'react-native-device-info';
+
+//var DeviceInfo = require('react-native-device-info');
 //import HideableView from 'react-native-hideable-view';
 
 // Import My Own Libraries
-import { hello, getImage, contentSnippet, ipAddress, portAddress } from '../../helpers/helpers';
+import { hello, getImage, contentSnippet, ipAddress, portAddress, ipPortAddress } from '../../helpers/helpers';
 
 // Import Themes
 import getTheme from '../../themes/components';
@@ -51,8 +54,23 @@ export default class LoginPage extends Component {
 			errorMessage: "",
 			loginMessage: "",
 			tokenValueContentsState: "",
-			isTokenExpired: ""
+			isTokenExpired: "",
+			fixedMarginTop: 0,
+			deviceUniqueIDValue: DeviceInfo.getUniqueID(),
+			usernameSession: '',
+			tokenSession: ''
 		}
+
+		// AsyncStorage - Save Data to Session Storage
+		AsyncStorage.getItem('usernameTokenSession', (error, result) => {
+          	if (result) {
+              	let resultParsed = JSON.parse(result)
+              	this.setState({
+                	usernameSession: resultParsed.usernameSession,
+                  	tokenSession: resultParsed.tokenSession
+              	});
+          	}
+	    });
 
 		// Event Listener for orientation changes
 	    Dimensions.addEventListener('change', () => {
@@ -70,114 +88,45 @@ export default class LoginPage extends Component {
 	}
 
 	// Load Data after Rendering
-	async componentDidMount() {
-		//this.getData();
-		//this.readTokenFile();
+	componentDidMount() {
+		// Get Screen Height to Make it Fixed
+		const dim = Dimensions.get('screen');
+		const fixedHeight = dim.height;
 
-		/*const fileTokenExists = await FileSystem.fileExists('tokenFile.txt');
-		const fileUsernameExists = await FileSystem.fileExists('usernameFile.txt');
+		if (fixedHeight > 0 && fixedHeight <= 534) {
+			var fixedMarginTopFinal = 30;
+		} else {
+			var fixedMarginTopFinal = 100;
+		}
 
-		// Check token if file exists
-		if (fileTokenExists == true && fileUsernameExists == true) {
-			this.checkToken();
-		}*/
+		this.setState({
+			fixedMarginTop: fixedMarginTopFinal // Set Margin Top
+		});
+
+		//alert(fixedHeight);
 	}
 
-	// Write Token File
-	async writeTokenFile(tokenValue, usernameValue) {
-	    const tokenValueContents = tokenValue;
-	    const usernameValueContents = usernameValue;
+	// Save Data to Session Storage
+	saveDataSession(usernameValue, tokenValue) {
+	    let usernameSession = usernameValue;
+	    let tokenSession = tokenValue;
+	    let dataSession = {
+	        usernameSession: usernameSession,
+	        tokenSession: tokenSession
+	    }
 
-	    await FileSystem.writeToFile('tokenFile.txt', tokenValueContents.toString());
-	    await FileSystem.writeToFile('usernameFile.txt', usernameValueContents.toString());
-	    
-	    //await FileSystem.writeToFile('tokenFile.txt', fileContents.toString(), FileSystem.storage.important); //exclude file from the backup
-	    //alert('file is written');
-	}
-
-	// Read Token File
-	/*async readTokenFile() {
-	    const tokenValueContents = await FileSystem.readFile('tokenFile.txt');
-	    const usernameValueContents = await FileSystem.readFile('usernameFile.txt');
+	    AsyncStorage.setItem('usernameTokenSession', JSON.stringify(dataSession));
 
 	    this.setState({
-	      checkPlayingStatus: fileContents
-	    })
+	        usernameSession: usernameSession,
+	        tokenSession: tokenSession
+	    });
 
-	    const checkPath = await FileSystem.absolutePath('tokenFile.txt');
-	    
-	    alert(checkPath);
-	}*/
-
-	/*async checkIfFileExists() {
-		const fileTokenExists = await FileSystem.fileExists('tokenFile.txt');
-		const fileUsernameExists = await FileSystem.fileExists('usernameFile.txt');
-		const directoryExists = await FileSystem.directoryExists('my-directory/my-file.txt');
-		
-		console.log(`file exists: ${fileExists}`);
-		console.log(`directory exists: ${directoryExists}`);
-
-		alert(`file exists: ${fileTokenExists}`);
-	}*/
-
-	// Check Token
-    async checkToken() {
-    	const tokenValueContents = await FileSystem.readFile('tokenFile.txt');
-    	const usernameValueContents = await FileSystem.readFile('usernameFile.txt');
-
-    	this.setState({tokenValueContentsState: tokenValueContents});
-
-    	if (tokenValueContents == "tokenLogout") {
-    		const tokenValueContents = "";
-    	}
-
-		return fetch('http://' + ipAddress() + ':' + portAddress() + '/api/refresh_token', {
-		  method: 'POST',
-		  headers: {
-		    'Accept': 'application/json',
-		    'Content-Type': 'application/json',
-		  },
-		  body: JSON.stringify({
-		    token: tokenValueContents,
-		  })
-		})
-		.then((response) => response.json())
-    	.then((responseJson) => {
-    		//alert(JSON.stringify(responseJson));
-
-    		//this.setState({loginMessage: responseJson.message}); // Get the data from API
-
-    		if (responseJson.message == "Successful") {
-    			//alert("Successful");
-
-    			this.writeTokenFile(responseJson.token, responseJson.profile.user_id); // write token to file
-
-    			//Actions.tabbar({type:ActionConst.RESET});
-
-    			Actions.tabbar({usernameLogin: usernameValueContents});
-    			//Actions.home({usernameLogin: usernameValueContents});
-    			Actions.home_page({usernameLogin: usernameValueContents}); // go to Home Page directly without Login
-    		} else if (responseJson.message == "Token is no longer valid") {
-    			alert(responseJson.message);
-
-    			this.setState({isTokenExpired: responseJson.message});
-
-    			Actions.login_page({type:ActionConst.RESET}); // go to Login Page
-    		} else {
-    			//alert("Please Login");
-
-    			Actions.login_page({type:ActionConst.RESET}); // go to Login Page
-    		}
-    	})
-    	.catch((error) => {
-    		//console.error(error);
-    		
-    		alert(error);
-    	});
+	    //alert('Data tersimpan');
 	}
 
 	// Login Action
-	loginAction(usernameValue, passwordValue, device_idValue) {
+	loginAction(usernameValue, passwordValue, deviceUnique_idValue) {
     	if (usernameValue == "") {
     		this.usernameTxt._root.focus();
     		this.setState({errorMessage: "Your username is empty"})
@@ -185,13 +134,13 @@ export default class LoginPage extends Component {
     		this.passwordTxt._root.focus();
     		this.setState({errorMessage: "Your password is empty"})
     	} else {
-    		this.getLoginResponse(usernameValue, passwordValue, device_idValue); // Get Login Response
+    		this.getLoginResponse(usernameValue, passwordValue, deviceUnique_idValue); // Get Login Response
     	}
     }
 
     // Get Login Response
-    getLoginResponse(usernameValue, passwordValue, device_idValue) {
-		return fetch('http://' + ipAddress() + ':' + portAddress() + '/login', {
+    getLoginResponse(usernameValue, passwordValue, deviceUnique_idValue) {
+		return fetch(ipPortAddress() + '/login', {
 		  method: 'POST',
 		  headers: {
 		    'Accept': 'application/json',
@@ -200,24 +149,17 @@ export default class LoginPage extends Component {
 		  body: JSON.stringify({
 		    username: usernameValue,
 		    password: passwordValue,
-		    device_id: device_idValue
+		    device_id: deviceUnique_idValue
 		  })
 		})
 		.then((response) => response.json())
     	.then((responseJson) => {
-    		//alert(JSON.stringify(responseJson));
-
-    		//this.setState({loginMessage: responseJson.message}); // Get the data from API
-
     		if (responseJson.message == "Successful") {
 
-    			//tokenValue = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiaGVyZGkiLCJyb2xlIjoic3VwZXJfdXNlciIsImV4cCI6MTUwODgzMTIxNzIzN30.EJ_MKjAbPRJhNkcmkWooClQMi2xQ63JLoTVH0mleoYg";
-
-    			this.writeTokenFile(responseJson.token, usernameValue); // write token to file
+    			this.saveDataSession(usernameValue, responseJson.token); // Save Data to Session Storage
     			
-	    		Actions.tabbar({usernameLogin: usernameValue});
-    			//Actions.home({usernameLogin: usernameValue});
-	    		Actions.home_page({usernameLogin: usernameValue}); // go to Home Page
+	    		Actions.tabbar({usernameLogin: this.state.tokenSession});
+    			Actions.home_page({usernameLogin: this.state.tokenSession}); // go to Home Page
 
 	    		this.usernameTxt._root.clear();
 		    	this.state.usernameValue = ""
@@ -276,81 +218,72 @@ export default class LoginPage extends Component {
 
 		// Display Single Value
 	    let loginFormButton = () => {
-	    	if (this.state.tokenValueContentsState == "tokenLogout" || this.state.tokenValueContentsState == "" || this.state.isTokenExpired == "Token is no longer valid") {
-	    		return (
-		    		<Content contentContainerStyle={{flex: 1, backgroundColor: '#233F4A'}}>
-		        		<View style={{justifyContent: 'center', alignItems: 'center', marginTop: 80, top: 20}}>
-		        			<Image source={require('../../logo/apbi_logo.png')} style={{width: 150, height: 150}} />
-		        		</View>
+    		return (
+	    		<View style={{flex: 1, backgroundColor: '#233F4A'}}>
+	        		<View style={{justifyContent: 'center', alignItems: 'center', marginTop: this.state.fixedMarginTop}}>
+	        			<Image source={require('../../logo/apbi_logo.png')} style={{width: 150, height: 150}} />
+	        		</View>
 
-		        		<Form>
-				            <Item floatingLabel>
-				              <Label style={{color: '#fff'}}>Username</Label>
-				              <Input
-				              	style={{color: '#fff'}}
-				              	onChangeText={(text) => this.setState({usernameValue: text})}
-				            	value={this.state.usernameValue}
-				            	keyboardType={'twitter'}
-				            	secureTextEntry={false}
-				            	maxLength={20}
-				            	returnKeyType={'next'}
-				            	/*placeholder={'Username'}*/
-				            	enablesReturnKeyAutomatically={true}
-				            	selectionColor={'#fff'}
-				            	placeholderTextColor={'#fff'}
-				            	underlineColorAndroid={'transparent'}
-				            	/*ref="usernameTxt"*/
-				            	getRef={(input) => { this.usernameTxt = input; }}
-				            	onKeyPress={this.handleKeyDownUsername.bind(this)}
-				              />
-				            </Item>
+	        		<Form>
+			            <Item floatingLabel>
+			              <Label style={{color: '#fff'}}>Username</Label>
+			              <Input
+			              	style={{color: '#fff'}}
+			              	onChangeText={(text) => this.setState({usernameValue: text})}
+			            	value={this.state.usernameValue}
+			            	keyboardType={'twitter'}
+			            	secureTextEntry={false}
+			            	maxLength={20}
+			            	returnKeyType={'next'}
+			            	/*placeholder={'Username'}*/
+			            	enablesReturnKeyAutomatically={true}
+			            	selectionColor={'#fff'}
+			            	placeholderTextColor={'#fff'}
+			            	underlineColorAndroid={'transparent'}
+			            	/*ref="usernameTxt"*/
+			            	getRef={(input) => { this.usernameTxt = input; }}
+			            	onKeyPress={this.handleKeyDownUsername.bind(this)}
+			              />
+			            </Item>
 
-				            <Item floatingLabel last>
-				              <Label style={{color: '#fff'}}>Password</Label>
-				              <Input
-				              	style={{color: '#fff'}}
-				              	onChangeText={(text) => this.setState({passwordValue: text})}
-		                    	value={this.state.passwordValue}
-		                    	keyboardType={'twitter'}
-		                    	secureTextEntry={true}
-		                    	maxLength={20}
-		                    	returnKeyType={'go'}
-		                    	/*placeholder={'Password'}*/
-		                    	enablesReturnKeyAutomatically={true}
-		                    	selectionColor={'#fff'}
-		                    	placeholderTextColor={'#fff'}
-		                    	underlineColorAndroid={'transparent'}
-		                    	/*ref="passwordTxt"*/
-		                    	getRef={(input) => { this.passwordTxt = input; }}
-		                    	onKeyPress={this.handleKeyDownPassword.bind(this)}
-				              />
-				            </Item>
-				        </Form>
+			            <Item floatingLabel last>
+			              <Label style={{color: '#fff'}}>Password</Label>
+			              <Input
+			              	style={{color: '#fff'}}
+			              	onChangeText={(text) => this.setState({passwordValue: text})}
+	                    	value={this.state.passwordValue}
+	                    	keyboardType={'twitter'}
+	                    	secureTextEntry={true}
+	                    	maxLength={20}
+	                    	returnKeyType={'go'}
+	                    	/*placeholder={'Password'}*/
+	                    	enablesReturnKeyAutomatically={true}
+	                    	selectionColor={'#fff'}
+	                    	placeholderTextColor={'#fff'}
+	                    	underlineColorAndroid={'transparent'}
+	                    	/*ref="passwordTxt"*/
+	                    	getRef={(input) => { this.passwordTxt = input; }}
+	                    	onKeyPress={this.handleKeyDownPassword.bind(this)}
+			              />
+			            </Item>
+			        </Form>
 
-		                <View style={{justifyContent: 'center', alignItems: 'center', marginTop: 20}}>
-			                <CardItem key={1} style={{backgroundColor: '#233F4A'}}>
-			                <Button block light style={{width: 250}} onPress={() => {this.loginAction(this.state.usernameValue, this.state.passwordValue, 'ID_Dev1')}}>
-					            <Text>Login</Text>
-					        </Button>
-					        </CardItem>
+	                <View style={{justifyContent: 'center', alignItems: 'center', marginTop: 20}}>
+		                <CardItem key={1} style={{backgroundColor: '#233F4A'}}>
+		                <Button block light style={{width: 250}} onPress={() => {this.loginAction(this.state.usernameValue, this.state.passwordValue, this.state.deviceUniqueIDValue)}}>
+				            <Text>Login</Text>
+				        </Button>
+				        </CardItem>
 
-					        <Text style={{color: '#fff', marginBottom: 10}} onPress={() => {this.forgotPasswordAction()}}>Forgot Password</Text>
-					        <Text style={{color: '#fff', marginBottom: 10}} onPress={() => {this.registerAction()}}>Register</Text>
+				        <Text style={{color: '#fff', marginBottom: 10}} onPress={() => {this.forgotPasswordAction()}}>Forgot Password</Text>
+				        <Text style={{color: '#fff', marginBottom: 10}} onPress={() => {this.registerAction()}}>Register</Text>
 
-					        <Text style={{color: '#fff'}}>{this.state.errorMessage}</Text>
-				        </View>
+				        <Text style={{color: '#fff'}}>{this.state.errorMessage}</Text>
+			        </View>
 
-						{this.myKeyboardSpacer()}
-		        	</Content>
-		    	)
-	    	} else {
-	    		return (
-	    			<Content contentContainerStyle={{flex: 1, backgroundColor: '#233F4A', justifyContent: 'center', alignItems: 'center'}}>
-	    				<Text style={{color: '#fff'}}>LOGGING IN...</Text>
-	    			</Content>
-	    		)
-	    	}
-	    	
+					{/*this.myKeyboardSpacer()*/}
+	        	</View>
+	    	)	    	
 	    }
 
 	    return (

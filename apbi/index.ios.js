@@ -9,11 +9,12 @@
 
 // Import Libraries
 import React, { Component } from 'react';
-import { AppRegistry, Text, View, BackHandler, ToastAndroid, NetInfo } from 'react-native';
+import { AppRegistry, Text, View, BackHandler, ToastAndroid, NetInfo, Platform } from 'react-native';
 import { Container, StyleProvider } from 'native-base';
 import { Router, Scene } from 'react-native-router-flux';
 import { Icon } from 'native-base';
 import { Actions, ActionConst } from 'react-native-router-flux';
+import KeyboardSpacer from 'react-native-keyboard-spacer';
 
 // Import My Own Libraries
 import { hello, getImage, contentSnippet } from './src/helpers/helpers';
@@ -30,15 +31,17 @@ import IndexPage from './src/components/pages/index_page';
 import LoginPage from './src/components/pages/login_page';
 import RegisterPage from './src/components/pages/register_page';
 import ForgotPasswordPage from './src/components/pages/forgot_password_page';
-import EditProfilePage from './src/components/pages/edit_profile_page';
 
 import HomePage from './src/components/pages/home_page';
 import AboutPage from './src/components/pages/about_page';
 import ForumPage from './src/components/pages/forum_page';
+import AddPostForumPage from './src/components/pages/add_post_forum_page';
+import AddCommentForumPage from './src/components/pages/add_comment_forum_page';
 import ProductPage from './src/components/pages/product_page';
 import ProductDetailPage from './src/components/pages/product_detail_page';
 import CartPage from './src/components/pages/cart_page';
 import ProfilePage from './src/components/pages/profile_page';
+import EditProfilePage from './src/components/pages/edit_profile_page';
 
 // Simple component to render something in place of icon
 /*const TabIcon = ({ selected, title }) => {
@@ -122,6 +125,27 @@ export default class apbi extends Component {
     }
   }
 
+  // Render Right Button
+  renderRightButton = () => {
+      return (
+        <Icon name="add" onPress={() => {this.goToAddPostForumAction()}} style={{color: '#fff'}} />
+      )
+  }
+
+  // Go to Add Post Forum
+  goToAddPostForumAction() {
+    Actions.add_post_forum_page({}); // go to Add Post Forum Page
+  }
+
+  // Keyboard Spacer
+  myKeyboardSpacer() {
+    if (Platform.OS === 'ios') {
+        return <KeyboardSpacer />;
+    } else {
+      return null;
+    }
+  }
+
   render() {
     return (
 
@@ -137,27 +161,76 @@ export default class apbi extends Component {
               
               {/*Tabs after Login*/}
               <Scene key="tabbar" tabs={true} tabBarStyle={{ backgroundColor: '#233F4A' }}>
+
+                {/*Home*/}
                 <Scene key="home" title="Home" icon={TabIcon}>
-                  <Scene key="home_page" component={HomePage} title="Home Page" hideNavBar={true} initial />
+                  <Scene
+                    key="home_page"
+                    component={HomePage}
+                    title="Home Page"
+                    hideNavBar={true}
+                    initial />
                   
                 </Scene>
 
+                {/*About*/}
                 <Scene key="about" title="About" icon={TabIcon}>
-                  <Scene key="about_page" component={AboutPage} title="About Page" hideNavBar={true} initial />
+                  <Scene
+                    key="about_page"
+                    component={AboutPage}
+                    title="About Page"
+                    hideNavBar={true}
+                    initial />
                   
                 </Scene>
 
+                {/*Forum*/}
                 <Scene key="forum" title="Forum" icon={TabIcon}>
-                  <Scene key="forum_page" component={ForumPage} title="Forum Page" hideNavBar={true} initial />
+                  <Scene
+                    key="forum_page"
+                    component={ForumPage}
+                    title="Forum Page"
+                    hideNavBar={false}
+                    navigationBarStyle={{backgroundColor: '#233F4A'}}
+                    titleStyle={{color: '#fff'}}
+                    leftButtonIconStyle={{tintColor: '#fff'}}
+                    barButtonTextStyle={{color: '#fff'}}
+                    barButtonIconStyle={{tintColor: '#fff'}}
+                    renderRightButton={() => this.renderRightButton()}
+                    initial />
+
+                    <Scene
+                    key="add_post_forum_page"
+                    component={AddPostForumPage}
+                    title="Add Post"
+                    hideNavBar={false}
+                    navigationBarStyle={{backgroundColor: '#233F4A'}}
+                    titleStyle={{color: '#fff'}}
+                    leftButtonIconStyle={{tintColor: '#fff'}}
+                    barButtonTextStyle={{color: '#fff'}}
+                    barButtonIconStyle={{tintColor: '#fff'}} />
+
+                    <Scene
+                    key="add_comment_forum_page"
+                    component={AddCommentForumPage}
+                    title="Add Comment"
+                    hideNavBar={false}
+                    navigationBarStyle={{backgroundColor: '#233F4A'}}
+                    titleStyle={{color: '#fff'}}
+                    leftButtonIconStyle={{tintColor: '#fff'}}
+                    barButtonTextStyle={{color: '#fff'}}
+                    barButtonIconStyle={{tintColor: '#fff'}} />
                   
                 </Scene>
 
+                {/*Product*/}
                 <Scene key="product" title="Product" icon={TabIcon}>
                   <Scene
                     key="product_page"
                     component={ProductPage}
                     title="Product Page"
-                    hideNavBar={true} initial />
+                    hideNavBar={true}
+                    initial />
 
                   <Scene
                     key="product_detail_page"
@@ -183,12 +256,14 @@ export default class apbi extends Component {
                   
                 </Scene>
 
+                {/*Profile*/}
                 <Scene key="profile" title="Profile" icon={TabIcon}>
                   <Scene
                     key="profile_page"
                     component={ProfilePage}
                     title="Profile Page"
-                    hideNavBar={true} initial />
+                    hideNavBar={true}
+                    initial />
 
                   <Scene
                     key="edit_profile_page"
@@ -210,8 +285,12 @@ export default class apbi extends Component {
             </Scene>
           </Router>
 
+          {this.myKeyboardSpacer()}
+
         </Container>
       </StyleProvider>
+
+      
 
     );
   }
