@@ -9,6 +9,74 @@ var waterfall = require('a-sync-waterfall');
 
 var forum_service = {
   add_thread: function(req, res){
+    waterfall([
+      function getID(id){
+        let query_cmd_select = "SELECT CONCAT('forumID_',ifnull(max(CAST(SUBSTRING(forum_id,9,30) as UNSIGNED)),0)+1) as forum_id from forum;";
+        query(query_cmd_select).then(function(result_1){
+          id(null, result_1[0].forum_id);
+        });
+      },function upload_picture(id, isUploaded){
+        let pic = '';
+        let decoded = jwt.decode(req.headers["x-token"], config.jwt_signature);
+        var storage = multer.diskStorage({
+        destination: function(req, file, callback){
+          callback(null, './static/forum_images');
+        },
+        filename: function(req, file, callback){
+          if(decoded.user == req.body.user_id){
+            pic = id+path.extname(file.originalname);
+            callback(null, pic);
+          }else{
+            callback(null, null);
+          }
+        }
+        });
+        var upload = multer({storage: storage}).array('forum_pic', 1); //max can upload 1 photo
+        upload(req, res, function(err){
+          if(!err){
+            isUploaded(null, id, pic);
+          }else{
+            isUploaded(null, id, null);
+          }
+        });
+      },function insertforum(id, pic, insert){
+        data = req.body;
+        let current_time = new Date();
+        let user_name = jwt.decode(req.headers['x-token'], config.jwt_signature).user;
+        let params_insert =[id, data.title, data.content, current_time, user_name, 'active', pic];
+        let query_cmd_insert = "INSERT INTO forum (forum_id, title, content, posted_date, posted_by, status, picture) values (?,?,?,?,?,?,?);"
+        query(mysql.format(query_cmd_insert, params_insert)).then(function(res_1){
+          if(res_1.affectedRows > 0){
+            //console.log("aa");
+            insert(null, "success");
+          }else{
+            //console.log("bb");
+            insert(null, "no record");
+          }
+        }).catch(function(error){
+          console.log("error: "+error);
+          insert(error, "error");
+        });
+      }
+      ],function (error, result){
+        if(result == "success"){
+          res.status(config.http_code.ok);
+          res.json({
+            "status": config.http_code.ok,
+            "message": "Successfully Inserted"
+          });
+        }else{
+          console.log("error: "+error);
+          res.status(config.http_code.in_server_err);
+          res.json({
+            "status": config.http_code.in_server_err,
+            "message": "Internal Server Error"
+          });
+        }
+      }
+    );
+  },
+  add_thread_old: function(req, res){
     let data = req.body;
     waterfall([
       function getID(id){
@@ -19,7 +87,7 @@ var forum_service = {
       },
       function insertforum(id, result){
         let current_time = new Date();
-        let user_name = jwt.decode(data.token, config.jwt_signature).user;
+        let user_name = jwt.decode(req.headers['x-token'], config.jwt_signature).user;
         let params_insert =[id, data.title, data.content, current_time, user_name, 'active'];
         let query_cmd_insert = "INSERT INTO forum (forum_id, title, content, posted_date, posted_by, status) values (?,?,?,?,?,?);"
         query(mysql.format(query_cmd_insert, params_insert)).then(function(res){
@@ -30,7 +98,7 @@ var forum_service = {
           }
         }).catch(function(error){
           console.log("error: "+error);
-          result(null, "error");
+          result(error, "error");
         });
       }
     ],
@@ -42,6 +110,7 @@ var forum_service = {
             "message": "Successfully Inserted"
           });
         }else{
+          console.log(err);
           res.status(config.http_code.in_server_err);
           res.json({
             "status": config.http_code.in_server_err,

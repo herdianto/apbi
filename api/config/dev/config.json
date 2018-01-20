@@ -29,6 +29,7 @@
     "select_limit":{
         "product": 5,
         "comment": 2,
-        "thread": 2
+        "thread": 2,
+        "transaction" : 2
     }
 }

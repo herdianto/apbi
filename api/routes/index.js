@@ -45,8 +45,8 @@ router.get('/api/product/search', product_service.search);
 router.get('/api/product/get_product_list/:page', product_service.get_product_list);
 router.post('/api/product/buy', product_service.buy);
 router.get('/api/product/detail/:prod_id', product_service.get_product_detail);
-router.get('/api/admin/product/get_transaction', product_service.get_transaction);
-router.get('/api/product/get_transaction', product_service.get_transaction);
+router.get('/api/admin/product/get_transaction/:page', product_service.get_transaction);
+router.get('/api/product/get_transaction/:page', product_service.get_transaction);
 router.post('/api/admin/product/search', product_service.search_admin);
 router.post('/api/admin/product/insert', product_service.create);
 router.post('/api/admin/product/update', product_service.update);
@@ -60,5 +60,6 @@ router.post('/api/forum/add_comment', forum_service.add_comment);
 router.post('/api/forum/delete_comment', forum_service.delete_comment);
 router.get('/api/forum/view_thread', forum_service.view_thread);
 router.get('/api/forum/get_comment', forum_service.get_comment);
+
 
 module.exports = router;
