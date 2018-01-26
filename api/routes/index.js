@@ -36,7 +36,7 @@ router.post('/api/admin/about/edit_about', about_service.edit_about);
 //news servie
 router.post('/api/admin/news/post_news', news_service.post_news);
 router.get('/news/get_news', news_service.get_news);
-router.get('/about/api/admin/get_news', news_service.get_news_admin);
+router.get('/about/api/admin/get_news', news_service.get_news_admin); //to be implemented
 router.post('/api/admin/news/edit_news', news_service.edit_news);
 router.get('/news/search', news_service.search_news);
  

@@ -104,6 +104,7 @@ var news_service = {
          "FROM news WHERE status = 'active'";
         let params_select =[];
         let about = {};
+        let news = new Array();
         query(mysql.format(query_cmd_select, params_select)).then(function(data){
           res.status(config.http_code.ok);
           for(let i=0; i<data.length; i++){
@@ -114,8 +115,9 @@ var news_service = {
             about.posted_by = data[i].posted_by;
             about.last_update_by = data[i].last_update_by;
             about.last_update_date = data[i].last_update_date;
+            news[i] = about;
           }
-          res.json(about);
+          res.json(news);
         }).catch(function(error){
           console.log("error: "+ error);
           res.status(config.http_code.in_server_err);

@@ -119,6 +119,7 @@ function genToken(user) {
     );
     var profile = {
         user_id: user.id,
+        role: user.role,
         address: user.address,
         delivery_address : user.delivery_addr,
         email: user.email
