@@ -108,7 +108,7 @@ var news_service = {
           res.status(config.http_code.ok);
           for(let i=0; i<data.length; i++){
             let about = {};
-            about.id = data[i].about_id;
+            about.id = data[i].news_id;
             about.title = data[i].title;
             about.content = data[i].content;
             about.posted_date = data[i].posted_date;
@@ -144,7 +144,7 @@ var news_service = {
           res.status(config.http_code.ok);
           for(let i=0; i<data.length; i++){
             let about = {};
-            about.id = data[i].about_id;
+            about.id = data[i].news_id;
             about.title = data[i].title;
             about.content = data[i].content;
             about.posted_date = data[i].posted_date;

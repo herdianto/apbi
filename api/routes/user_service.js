@@ -283,6 +283,7 @@ var user_service = {
       query(mysql.format(query_cmd, params)).then(function(result){
         for(let i=0; i<result.length; i++){
           let user = {};
+          user.id = result[i].user_id;
           user.name = result[i].name;
           user.email = result[i].email;
           user.address = result[i].address;
