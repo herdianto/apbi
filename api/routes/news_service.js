@@ -103,11 +103,11 @@ var news_service = {
         let query_cmd_select = "SELECT news_id, title, content, posted_date, posted_by, last_update_date, last_update_by "+
          "FROM news WHERE status = 'active'";
         let params_select =[];
-        let about = {};
         let news = new Array();
         query(mysql.format(query_cmd_select, params_select)).then(function(data){
           res.status(config.http_code.ok);
           for(let i=0; i<data.length; i++){
+            let about = {};
             about.id = data[i].about_id;
             about.title = data[i].title;
             about.content = data[i].content;
