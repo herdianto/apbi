@@ -100,7 +100,7 @@ var news_service = {
     let current_time = new Date();
     waterfall([
       function getNews(threads){
-        let query_cmd_select = "SELECT news_id, title, content, posted_date, posted_by, last_update_date, last_update_by "+
+        let query_cmd_select = "SELECT news_id, title, status, content, posted_date, posted_by, last_update_date, last_update_by "+
          "FROM news WHERE status = 'active'";
         let params_select =[];
         let news = new Array();
@@ -113,6 +113,7 @@ var news_service = {
             about.content = data[i].content;
             about.posted_date = data[i].posted_date;
             about.posted_by = data[i].posted_by;
+            about.status = data[i].status;
             about.last_update_by = data[i].last_update_by;
             about.last_update_date = data[i].last_update_date;
             news[i] = about;
@@ -129,7 +130,40 @@ var news_service = {
     }]);
   },
   get_news_admin: function(req, res){
-    //to be implemented if needed
+    let body = req.body;
+    let qry = req.query;
+    let current_time = new Date();
+    waterfall([
+      function getNews(threads){
+        if(qry.status == 'all'){qry.status = '';}
+        let query_cmd_select = "SELECT news_id, title, status, content, posted_date, posted_by, last_update_date, last_update_by "+
+         "FROM news WHERE status like ?";
+        let params_select =['%'+qry.status+'%'];
+        let news = new Array();
+        query(mysql.format(query_cmd_select, params_select)).then(function(data){
+          res.status(config.http_code.ok);
+          for(let i=0; i<data.length; i++){
+            let about = {};
+            about.id = data[i].about_id;
+            about.title = data[i].title;
+            about.content = data[i].content;
+            about.posted_date = data[i].posted_date;
+            about.posted_by = data[i].posted_by;
+            about.status = data[i].status;
+            about.last_update_by = data[i].last_update_by;
+            about.last_update_date = data[i].last_update_date;
+            news[i] = about;
+          }
+          res.json(news);
+        }).catch(function(error){
+          console.log("error: "+ error);
+          res.status(config.http_code.in_server_err);
+          res.json({
+            "status": config.http_code.in_server_err,
+            "message": "Internal Server Error"
+          });
+        });
+    }]);
   },
   search_news: function(req, res){
     let news_s = new Array();

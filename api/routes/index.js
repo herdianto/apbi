@@ -25,6 +25,7 @@ router.get('/forget_action', user_service.apply_password);
 router.post('/api/refresh_token', auth.renew_token);
 router.post('/api/update_profile', user_service.update_profile);
 router.post('/api/admin/member_approval', user_service.set_member_status);
+router.get('/api/admin/member_list', user_service.get_member_list);
 router.post('/api/display_profile', user_service.display_profile);
 
 //about servie
@@ -36,7 +37,7 @@ router.post('/api/admin/about/edit_about', about_service.edit_about);
 //news servie
 router.post('/api/admin/news/post_news', news_service.post_news);
 router.get('/news/get_news', news_service.get_news);
-router.get('/about/api/admin/get_news', news_service.get_news_admin); //to be implemented
+router.get('/api/admin/news/get_news', news_service.get_news_admin);
 router.post('/api/admin/news/edit_news', news_service.edit_news);
 router.get('/news/search', news_service.search_news);
  

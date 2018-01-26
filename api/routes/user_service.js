@@ -274,6 +274,30 @@ var user_service = {
         });
       });
     },
+    get_member_list: function(req, res){
+      let qry = req.query;
+      if(qry.role == 'all'){qry.role = '';}
+      let params = ['%'+qry.role+'%'];
+      let query_cmd = "SELECT * FROM apbi_user WHERE role like ?";
+      let users = new Array();
+      query(mysql.format(query_cmd, params)).then(function(result){
+        for(let i=0; i<result.length; i++){
+          let user = {};
+          user.name = result[i].name;
+          user.email = result[i].email;
+          user.address = result[i].address;
+          user.role =  result[i].role;
+          user.delivery_addr =  result[i].delivery_addr;
+          user.account_no =  result[i].account_no;
+          user.bank_name =  result[i].bank_name;
+          user.user_status =  result[i].user_status;
+          users[i] = user;
+        }
+        res.status(config.http_code.ok);
+        res.json(users);
+      })
+
+    },
     display_profile: function(req, res){
       let params=req.body;
       let decoded = jwt.decode(params.token, config.jwt_signature);
