@@ -211,7 +211,7 @@ export default class ProfilePage extends Component {
 
 		            		<Grid>
 					            <Col style={{ backgroundColor: '#233F4A', height: 200, justifyContent: 'center', alignItems: 'center' }}>
-					            	<Image source = {{uri: ipPortAddress() + this.state.profileContentData.picture + '?token=' + this.state.tokenSession}} style={{width: 150, height: 150}} />
+					            	<Image source = {{uri: this.state.profileContentData.picture != '' ? ipPortAddress() + this.state.profileContentData.picture + '?token=' + this.state.tokenSession : 'https://www.sparklabs.com/forum/styles/comboot/theme/images/default_avatar.jpg'}} style={{width: 150, height: 150}} />
 					            	<Text style={{marginTop: 10, color: '#fff'}}>{this.state.profileContentData.name}</Text>
 					            </Col>
 					        </Grid>

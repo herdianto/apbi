@@ -132,11 +132,14 @@ export default class EditProfilePage extends Component {
 				data.append('deliv_addr', '');
 				data.append('account_no', '');
 				data.append('bank_account', '');
-				data.append('prof_pic', {
-				  uri: this.state.profilePictureSource.uri,
-				  type: 'image/jpeg', // profilePictureSource.type
-				  name: this.state.profilePictureSource.fileName
-				});
+
+				if (this.state.profilePictureSource != '') {
+					data.append('prof_pic', {
+					  uri: this.state.profilePictureSource.uri,
+					  type: 'image/jpeg', // profilePictureSource.type
+					  name: this.state.profilePictureSource.fileName
+					});
+				}
 
 				return fetch(ipPortAddress() + '/api/update_profile', {  
 					method: 'POST',
