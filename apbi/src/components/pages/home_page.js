@@ -215,7 +215,7 @@ export default class HomePage extends Component {
 		      
 			        	<Content>
 
-		            		<Text>Welcome {this.state.tokenSession}</Text>
+		            		{/*<Text>Welcome {this.state.tokenSession}</Text>*/}
 
 		            		{newsContentResult}
 

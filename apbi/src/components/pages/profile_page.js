@@ -15,7 +15,6 @@ import TimeAgo from 'react-native-timeago';
 import FitImage from 'react-native-fit-image';
 import { Actions, ActionConst } from 'react-native-router-flux';
 import FileSystem from 'react-native-filesystem';
-//import PhotoUpload from 'react-native-photo-upload'
 
 // Import My Own Libraries
 import { hello, getImage, contentSnippet, ipAddress, portAddress, ipPortAddress } from '../../helpers/helpers';
@@ -23,21 +22,6 @@ import { hello, getImage, contentSnippet, ipAddress, portAddress, ipPortAddress 
 // Import Components
 import AppHeader from '../appHeader';
 import AppFooter from '../appFooter';
-
-// Import Camera
-var ImagePicker = require('react-native-image-picker');
-
-// More info on all the options is below in the README...just some common use cases shown here
-var options = {
-  title: 'Select Avatar',
-  customButtons: [
-    {name: 'fb', title: 'Choose Photo from Facebook'},
-  ],
-  storageOptions: {
-    skipBackup: true,
-    path: 'images'
-  }
-};
 
 // Button Action
 function buttonAction(button) {
@@ -134,6 +118,11 @@ export default class ProfilePage extends Component {
 	    //alert('Data tersimpan');
 	}
 
+	// Display Transaction Action
+	displayTransactionAction() {
+    	Actions.transaction_page({}); // go to Display Transaction Page
+    }
+
 	// Edit Profile Action
 	editProfileAction() {
     	Actions.edit_profile_page({}); // go to Edit Profile Page
@@ -144,37 +133,6 @@ export default class ProfilePage extends Component {
     	this.saveDataSession("tokenLogout", "usernameLogout");
 
     	Actions.login_page({type:ActionConst.RESET}); // go to Login Page
-    }
-
-    // Upload Photo
-    uploadPhotoButton() {
-    	/**
-		 * The first arg is the options object for customization (it can also be null or omitted for default options),
-		 * The second arg is the callback which sends object: response (more info below in README)
-		 */
-		ImagePicker.showImagePicker(options, (response) => {
-		  //alert('Response = ', response);
-
-		  if (response.didCancel) {
-		    //alert('User cancelled image picker');
-		  }
-		  else if (response.error) {
-		    //alert('ImagePicker Error: ', response.error);
-		  }
-		  else if (response.customButton) {
-		    //alert('User tapped custom button: ', response.customButton);
-		  }
-		  else {
-		    let source = { uri: response.uri, fileName: response.fileName, type: response.type };
-
-		    // You can also display the image using data:
-		    // let source = { uri: 'data:image/jpeg;base64,' + response.data };
-
-		    this.setState({
-		      avatarSource: source
-		    });
-		  }
-		});
     }
 
     // Get Display Profile
@@ -210,6 +168,34 @@ export default class ProfilePage extends Component {
 	    });
 	}
 
+	// Get Profile Picture
+    getProfilePicture() {
+    	// AsyncStorage - Save Data to Session Storage
+	    AsyncStorage.getItem('usernameTokenSession', (error, result) => {
+            if (result) {
+                let resultParsed = JSON.parse(result);
+                let usernameSession = resultParsed.usernameSession;
+                let tokenSession = resultParsed.tokenSession;
+                
+                return fetch(ipPortAddress() + '/api/images/user/riosimatupang.jpg', {
+				  method: 'GET',
+				  headers: {
+				    'x-token': tokenSession
+				  }
+				})
+				.then((response) => response.text())
+		    	.then((responseJson) => {
+		    		alert(responseJson);
+		    	})
+		    	.catch((error) => {
+		    		//console.error(error);
+		    		
+		    		alert(error);
+		    	});
+            }
+	    });
+	}
+
 	// Get the data
 	render() {
 
@@ -225,29 +211,7 @@ export default class ProfilePage extends Component {
 
 		            		<Grid>
 					            <Col style={{ backgroundColor: '#233F4A', height: 200, justifyContent: 'center', alignItems: 'center' }}>
-					            	<TouchableOpacity onPress={() => {this.uploadPhotoButton()}}>
-					            		<Image source = {{uri: ipPortAddress() + this.state.profileContentData.picture + '?token=' + this.state.tokenSession}} style={{width: 150, height: 150}} />
-					            	</TouchableOpacity>
-					            	{/*<PhotoUpload
-					            										   onPhotoSelect={avatar => {
-					            										     if (avatar) {
-					            										       alert('Image base64 string: ', avatar)
-					            										     }
-					            										   }}
-					            										 >
-					            										   <Image
-					            										     style={{
-					            										       paddingVertical: 30,
-					            										       width: 150,
-					            										       height: 150,
-					            										       borderRadius: 75
-					            										     }}
-					            										     resizeMode='cover'
-					            										     source={{
-					            										       uri: 'https://www.sparklabs.com/forum/styles/comboot/theme/images/default_avatar.jpg'
-					            										     }}
-					            										   />
-					            										 </PhotoUpload>*/}
+					            	<Image source = {{uri: ipPortAddress() + this.state.profileContentData.picture + '?token=' + this.state.tokenSession}} style={{width: 150, height: 150}} />
 					            	<Text style={{marginTop: 10, color: '#fff'}}>{this.state.profileContentData.name}</Text>
 					            </Col>
 					        </Grid>
@@ -255,10 +219,10 @@ export default class ProfilePage extends Component {
 					        <List>
 					            <ListItem style={{justifyContent: 'space-between'}}>
 					              <Text>Phone Number</Text>
-					              <Text>{this.state.tokenSession}</Text>
+					              <Text>08123456789</Text>
 					            </ListItem>
 
-					            <ListItem onPress={() => {this.editProfileAction()}}>
+					            <ListItem onPress={() => {this.displayTransactionAction()}}>
 					              <Text>List Transactions</Text>
 					            </ListItem>
 

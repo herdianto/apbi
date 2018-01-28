@@ -191,7 +191,7 @@ export default class AboutPage extends Component {
 		      
 			        	<Content>
 
-		            		<Text>About Page {this.state.tokenSession}</Text>
+		            		{/*<Text>About Page {this.state.tokenSession}</Text>*/}
 
 		            		{aboutContentResult}
 

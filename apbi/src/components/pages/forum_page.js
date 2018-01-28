@@ -52,6 +52,7 @@ export default class ForumPage extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
+			profileContentData: [],
 			forumContentData: [],
 			orientation: isPortrait() ? 'portrait' : 'landscape',
 			appState: AppState.currentState,
@@ -93,6 +94,8 @@ export default class ForumPage extends Component {
 
 	componentDidMount() {
 		this.getForumContent(this.state.pageID); // Get Forum Content
+
+		this.getDisplayProfile(); // Get Display Profile
 	}
 
 	// Unmount the variable
@@ -132,8 +135,8 @@ export default class ForumPage extends Component {
     }
 
     // Go to Add Comment Forum
-	goToAddCommentForumAction(forum_id, forum_title, forum_content, forum_posted_date, forum_posted_by, forum_last_update_date, forum_last_update_by, profile_picture, total_comment) {
-    	Actions.add_comment_forum_page({forumID: forum_id, forumTitle: forum_title, forumContent: forum_content, forumPostedDate: forum_posted_date, forumPostedBy: forum_posted_by, forumLastUpdateDate: forum_last_update_date, forumLastUpdateBy: forum_last_update_by, profilePicture: profile_picture, totalComment: total_comment}); // go to Add Comment Forum Page
+	goToAddCommentForumAction(forum_id, forum_title, forum_content, forum_posted_date, forum_posted_by, forum_last_update_date, forum_last_update_by, forum_picture, profile_picture, total_comment) {
+    	Actions.add_comment_forum_page({forumID: forum_id, forumTitle: forum_title, forumContent: forum_content, forumPostedDate: forum_posted_date, forumPostedBy: forum_posted_by, forumLastUpdateDate: forum_last_update_date, forumLastUpdateBy: forum_last_update_by, forum_picture: forum_picture, profilePicture: profile_picture, totalComment: total_comment}); // go to Add Comment Forum Page
     }
 
 	// Get Forum Content
@@ -352,6 +355,39 @@ export default class ForumPage extends Component {
 	    });        
     }
 
+    // Get Display Profile
+    getDisplayProfile() {
+    	// AsyncStorage - Save Data to Session Storage
+	    AsyncStorage.getItem('usernameTokenSession', (error, result) => {
+            if (result) {
+                let resultParsed = JSON.parse(result);
+                let usernameSession = resultParsed.usernameSession;
+                let tokenSession = resultParsed.tokenSession;
+                
+                return fetch(ipPortAddress() + '/api/display_profile', {
+				  method: 'POST',
+				  headers: {
+				    'Accept': 'application/json',
+				    'Content-Type': 'application/json',
+				  },
+				  body: JSON.stringify({
+				  	user_id: usernameSession,
+				    token: tokenSession,
+				  })
+				})
+				.then((response) => response.json())
+		    	.then((responseJson) => {
+		    		this.setState({profileContentData: responseJson}); // Get the data from API
+		    	})
+		    	.catch((error) => {
+		    		//console.error(error);
+		    		
+		    		alert(error);
+		    	});
+            }
+	    });
+	}
+
     // Read Enter Key Search Page Forum
 	handleKeyDownSearchPageForum(e) {
 	    if(e.nativeEvent.key == "Enter"){
@@ -372,6 +408,8 @@ export default class ForumPage extends Component {
 	// Get the data
 	render() {
 
+	    var profile_picture = ipPortAddress() + this.state.profileContentData.picture + '?token=' + this.state.tokenSession;
+	    
 	    let forumContentResult = this.state.forumContentData.map((forumContentDataDetail, index) => {
 	    	var forum_id = forumContentDataDetail.id;
 	    	var forum_title = forumContentDataDetail.title;
@@ -380,10 +418,24 @@ export default class ForumPage extends Component {
 	    	var forum_posted_by = forumContentDataDetail.posted_by;
 	    	var forum_last_update_date = forumContentDataDetail.last_update_date;
 	    	var forum_last_update_by = forumContentDataDetail.last_update_by;
-	    	var profile_picture = 'https://i.pinimg.com/564x/d7/a6/bd/d7a6bd392433310ff6088dda403c4f85.jpg';
+	    	var forum_picture = forumContentDataDetail.picture;
+	    	var forum_picture_full = ipPortAddress() + forum_picture + '?token=' + this.state.tokenSession;
 
 	    	//var forum_comment = forumContentDataDetail.comment;
 	    	var total_comment = forumContentDataDetail.comment.length;
+
+	    	// Display Forum Image
+	    	if (forum_picture != '/forum_images/') {
+	    		var displayForumImage = () => {
+	    			return (
+	    				<CardItem>
+			        		<FitImage source = {{uri: forum_picture_full}} style={{width: 150, height: 150}} />
+			        	</CardItem>
+	    			)
+	    		}
+	    	} else {
+	    		var displayForumImage = () => {}
+	    	}
 
 	    	// Delete Post Button
 	    	if (forum_posted_by == this.state.usernameSession) {
@@ -410,9 +462,7 @@ export default class ForumPage extends Component {
 		        		</Left>
 		        	</CardItem>
 
-		        	<CardItem>
-		        		<FitImage source = {{uri: profile_picture}} />
-		        	</CardItem>
+		        	{displayForumImage()}
 
 		        	<CardItem content>
 		        		<HTMLView value = {forum_content} />
@@ -423,7 +473,7 @@ export default class ForumPage extends Component {
 			        		<Text style={{marginLeft: -5}}><TimeAgo time = {forum_posted_date} /></Text>
 			        	
 			        		<Icon active name = "text" style={{marginLeft: 10}} />
-			        		<Text style={{marginLeft: -10}} onPress={() => {this.goToAddCommentForumAction(forum_id, forum_title, forum_content, forum_posted_date, forum_posted_by, forum_last_update_date, forum_last_update_by, profile_picture, total_comment)}}>{total_comment} Comments</Text>
+			        		<Text style={{marginLeft: -10}} onPress={() => {this.goToAddCommentForumAction(forum_id, forum_title, forum_content, forum_posted_date, forum_posted_by, forum_last_update_date, forum_last_update_by, forum_picture, profile_picture, total_comment)}}>{total_comment} Comments</Text>
 			        	
 			        		{deletePostButton()}
 		        	</CardItem>
@@ -441,11 +491,11 @@ export default class ForumPage extends Component {
 		      
 			        	<Content>
 
-		            		<Text>Forum Page {this.state.tokenSession}</Text>
+		            		{/*<Text>Forum Page {this.state.tokenSession}</Text>*/}
 
 		            		{forumContentResult}
 
-		            		<Text>{this.state.currentCount}</Text>
+		            		{/*<Text>{this.state.currentCount}</Text>*/}
 						
 						</Content>
 

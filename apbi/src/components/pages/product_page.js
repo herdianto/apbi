@@ -56,6 +56,7 @@ export default class ProductPage extends Component {
 			searchProductValue: "",
 			errorMessage: "",
 			screenWidth: 0,
+			imageWidth: 0,
 			searchPageProductValue: '',
 			pageID: 1,
 			maxPageID: 0,
@@ -94,10 +95,12 @@ export default class ProductPage extends Component {
 		// Get Screen Width to Make it Fixed
 		const dim = Dimensions.get('screen');
 		const fixedWidth = (dim.width / 3) - 1;
+		const fixedWidthImage = fixedWidth - 15;
 
 		this.setState({
 			cartList: this.props.cartList ? this.props.cartList : [], // Get Previous CartList
-			screenWidth: fixedWidth // Set Screen Width
+			screenWidth: fixedWidth, // Set Screen Width
+			imageWidth: fixedWidthImage
 		});
 
 		//alert(JSON.stringify(this.state.cartList));	
@@ -366,6 +369,7 @@ export default class ProductPage extends Component {
 			var product_posted_by = productData.posted_by;
 			var product_last_update_date = productData.last_update_date;
 			var product_last_update_by = productData.last_update_by;
+			var product_images = productData.product_images[0];
 
 			return(
 				/*<CardItem button onPress={() => {this.editProfileAction(product_name)}} key={product_id} style={{borderRadius: 2, borderWidth: 2, borderColor: '#eee', backgroundColor: '#fff', margin: 0.5}}>
@@ -374,7 +378,7 @@ export default class ProductPage extends Component {
 	        	</CardItem>*/
 
 	        	<TouchableOpacity onPress={() => {this.detailProductAction(product_id)}} key={product_id} style={{borderRadius: 2, borderWidth: 2, borderColor: '#eee', backgroundColor: '#fff', margin: 0.5, padding: 5, width: this.state.screenWidth}}>
-					<Image source={require('../../logo/profile_picture.png')} style={{width: 90, height: 90}} />
+					<Image source={{uri: ipPortAddress() + product_images + '?token=' + this.state.tokenSession}} style={{width: this.state.imageWidth, height: 90}} />
 					<Text>{product_name}</Text>
 				</TouchableOpacity>
 			)
@@ -427,7 +431,7 @@ export default class ProductPage extends Component {
 
 					        {/*this.myKeyboardSpacer()*/}
 
-					        <Text>{this.state.tokenSession}</Text>
+					        {/*<Text>{this.state.tokenSession}</Text>*/}
 	        				
 	        			</Content>
 
@@ -444,7 +448,7 @@ export default class ProductPage extends Component {
 		                    	style={{height: 30, width:150, borderColor: '#233F4A', borderWidth: 1, color: '#233F4A', fontSize: 12, marginTop: 12, marginRight: 7, padding: 5}}
 		                    	onChangeText={(text) => this.setState({searchPageProductValue: text})}
 		                    	value={this.state.searchPageProductValue}
-		                    	keyboardType={'web-search'}
+		                    	keyboardType={'numeric'}
 		                    	secureTextEntry={false}
 		                    	maxLength={20}
 		                    	returnKeyType={'search'}

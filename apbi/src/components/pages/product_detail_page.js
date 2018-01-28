@@ -235,13 +235,13 @@ export default class ProductDetailPage extends Component {
 			var product_posted_by = productDetailData.posted_by;
 			var product_last_update_date = productDetailData.last_update_date;
 			var product_last_update_by = productDetailData.last_update_by;
-			var product_images = productDetailData.images;
+			var product_images = productDetailData.images[0];
 
 			return(
 				<View key={product_id}>
 					<Grid>
 	        			<Col style={{ backgroundColor: '#233F4A', height: 200, justifyContent: 'center', alignItems: 'center' }}>
-				            	<Image source={require('../../logo/profile_picture.png')} style={{width: 150, height: 150}} />
+				            	<Image source={{uri: ipPortAddress() + product_images + '?token=' + this.state.tokenSession}} style={{width: 150, height: 150}} />
 				        </Col>
 			        </Grid>
 
@@ -303,7 +303,7 @@ export default class ProductDetailPage extends Component {
 
 		            		{productDetailDataResult}
 
-		            		<Text>{this.state.tokenSession}</Text>
+		            		{/*<Text>{this.state.tokenSession}</Text>*/}
 						
 						</Content>
 

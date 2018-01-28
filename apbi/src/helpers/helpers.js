@@ -24,7 +24,7 @@ export function contentSnippet(content) {
 }
 
 export function ipAddress() {
-	return '192.168.8.100';
+	return '185.176.90.32';
 }
 
 export function portAddress() {

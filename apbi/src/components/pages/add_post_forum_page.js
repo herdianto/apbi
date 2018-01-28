@@ -9,7 +9,7 @@
 
 // Import Libraries
 import React, { Component } from 'react';
-import { AppRegistry, Text, Image, Linking, Dimensions, ScrollView, AppState, Platform, View, AsyncStorage } from 'react-native';
+import { AppRegistry, Text, Image, Linking, Dimensions, ScrollView, AppState, Platform, View, TouchableOpacity, AsyncStorage } from 'react-native';
 import { Content, Card, CardItem, Body, Left, Thumbnail, Button, Icon, Container, Item, Input, Footer, FooterTab } from 'native-base';
 import HTMLView from 'react-native-htmlview';
 import TimeAgo from 'react-native-timeago';
@@ -17,6 +17,7 @@ import FitImage from 'react-native-fit-image';
 import { Actions, ActionConst } from 'react-native-router-flux';
 import KeyboardSpacer from 'react-native-keyboard-spacer';
 import FileSystem from 'react-native-filesystem';
+import ImagePicker from 'react-native-image-picker';
 
 // Import My Own Libraries
 import { hello, getImage, contentSnippet, ipAddress, portAddress, ipPortAddress } from '../../helpers/helpers';
@@ -59,6 +60,7 @@ export default class AddPostForumPage extends Component {
 			titleForumValue: '',
 			contentForumValue: '',
 			contentBoxHeight: 0,
+			forumPictureSource: '',
 			usernameSession: '',
 			tokenSession: ''
 		}
@@ -131,19 +133,29 @@ export default class AddPostForumPage extends Component {
 			AsyncStorage.getItem('usernameTokenSession', (error, result) => {
 	          	if (result) {
 	              	let resultParsed = JSON.parse(result);
+	              	let usernameSession = resultParsed.usernameSession;
 	              	let tokenSession = resultParsed.tokenSession;
 	              	
+	              	var data = new FormData();
+					data.append('user_id', usernameSession);
+					data.append('title', title_forum);
+					data.append('content', content_forum);
+
+					if (this.state.forumPictureSource != '') {
+						data.append('forum_pic', {
+						  uri: this.state.forumPictureSource.uri,
+						  type: 'image/jpeg', // avatarSource.type
+						  name: this.state.forumPictureSource.fileName
+						});	
+					}
+					
+
 	              	return fetch(ipPortAddress() + '/api/forum/add_thread', {
-					  method: 'POST',
-					  headers: {
-					    'Accept': 'application/json',
-					    'Content-Type': 'application/json',
-					  },
-					  body: JSON.stringify({
-					    title: title_forum,
-					    content: content_forum,
-					    token: tokenSession,
-					  })
+						method: 'POST',
+						headers: {
+							'x-token': tokenSession
+						},
+						body: data
 					})
 					.then((response) => response.json())
 			    	.then((responseJson) => {
@@ -169,6 +181,55 @@ export default class AddPostForumPage extends Component {
 	          	}
 		    });
 		}    	
+    }
+
+    // Upload Forum Picture
+    uploadForumPictureButton() {
+    	/**
+		 * The first arg is the options object for customization (it can also be null or omitted for default options),
+		 * The second arg is the callback which sends object: response (more info below in README)
+		 */
+
+		// More info on all the options is below in the README...just some common use cases shown here
+		var options = {
+		  /*title: 'Select Avatar',
+		  customButtons: [
+		    {name: 'fb', title: 'Choose Photo from Facebook'},
+		  ],*/
+		  	quality: 1.0,
+      		maxWidth: 500,
+      		maxHeight: 500,
+			storageOptions: {
+		    	skipBackup: true,
+		    	path: 'images'
+		  	}
+		};
+
+		ImagePicker.showImagePicker(options, (response) => {
+		  //alert('Response = ', response);
+
+		  if (response.didCancel) {
+		    //alert('User cancelled image picker');
+		  }
+		  else if (response.error) {
+		    //alert('ImagePicker Error: ', response.error);
+		  }
+		  else if (response.customButton) {
+		    //alert('User tapped custom button: ', response.customButton);
+		  }
+		  else {
+		    let source = { uri: response.uri, fileName: response.fileName, type: response.type };
+
+		    // You can also display the image using data:
+		    // let source = { uri: 'data:image/jpeg;base64,' + response.data };
+
+		    //alert(source.uri);
+
+		    this.setState({
+		      forumPictureSource: source
+		    });
+		  }
+		});
     }
 
 	// Read Enter Key Post Forum
@@ -252,7 +313,11 @@ export default class AddPostForumPage extends Component {
 			                    />
 		                    </Item>
 
-		                    <Text>{this.state.tokenSession}</Text>
+		                    <TouchableOpacity onPress={() => {this.uploadForumPictureButton()}} style={{alignItems: 'center'}}>
+			            		<Image source = {{uri: this.state.forumPictureSource ? this.state.forumPictureSource.uri : 'https://www.sparklabs.com/forum/styles/comboot/theme/images/default_avatar.jpg'}} style={{width: 150, height: 150}} />
+			            	</TouchableOpacity>
+
+		                    {/*<Text>{this.state.tokenSession}</Text>*/}
 						
 						</Content>
 

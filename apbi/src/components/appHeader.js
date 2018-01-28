@@ -19,7 +19,7 @@ export default class AppHeader extends Component {
       
         <Header>
           <Body style={{alignItems: 'center'}}>
-            <Image source={require('../logo/apbi_logo_landscape.png')} style={{width: 150, height: 30}} />
+            <Image source={require('../logo/apbi_logo_landscape.png')} style={{width: 150, height: 50}} />
           </Body>
         </Header>
         

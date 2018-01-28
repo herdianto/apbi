@@ -139,6 +139,7 @@ export default class CartPage extends Component {
 	// Get the data
 	render() {
 
+		var total_transaction_price = 0;
 		let cartListResult = this.state.cartList.map((cartListData, index) => {
     		var product_id = cartListData.product_id;
     		var product_name = cartListData.product_name;
@@ -146,6 +147,8 @@ export default class CartPage extends Component {
 			var quantity = cartListData.quantity;
 
 			var total_price = product_price * quantity;
+
+			total_transaction_price += total_price;
 
 			return (
 				<Grid key={index} style={{borderBottomWidth: 1, borderColor: '#eee', padding: 5}}>
@@ -197,10 +200,27 @@ export default class CartPage extends Component {
 			)
     	});
 
+    	// Display Total Transaction Price
+		var displayTotalTransactionPrice = () => {
+			return (
+				<Grid style={{borderBottomWidth: 1, borderColor: '#eee', padding: 5}}>
+        			<Row>
+            			<Col>
+				            	<Text>Total Transaction Price</Text>
+				        </Col>
+				        <Col style={{alignItems: 'flex-end'}}>
+				            	<Text>{total_transaction_price}</Text>
+				        </Col>
+				    </Row>
+		        </Grid>
+			)
+		}
+
+    	// Display Cart List Play Button
     	let cartListPayButton = () => {
     		if (this.state.cartList == "") {
     			return (
-    				<View>
+    				<View style={{alignItems: 'center'}}>
     					<Text>Tidak ada transaksi</Text>
     				</View>
     			)
@@ -208,6 +228,8 @@ export default class CartPage extends Component {
     			return (
     				<View>
 	    				{cartListResult}
+
+	    				{displayTotalTransactionPrice()}
 			        </View>
     			)
     		}
@@ -247,7 +269,7 @@ export default class CartPage extends Component {
 
 			        		{cartListPayButton()}
 
-			        		<Text>{this.state.tokenSession}</Text>
+			        		{/*<Text>{this.state.tokenSession}</Text>*/}
 
 			        	</Content>
 		            

@@ -9,7 +9,7 @@
 
 // Import Libraries
 import React, { Component } from 'react';
-import { AppRegistry, Text, Image, Linking, Dimensions, ScrollView, AppState, Platform, StyleSheet, View, TextInput, AsyncStorage } from 'react-native';
+import { AppRegistry, Text, Image, Linking, Dimensions, ScrollView, AppState, Platform, StyleSheet, View, TextInput, TouchableOpacity, AsyncStorage } from 'react-native';
 import { Content, Card, CardItem, Body, Left, Thumbnail, Button, Icon, Container, StyleProvider, Form, Item, Input, Label, Footer, FooterTab, Toast } from 'native-base';
 import TimeAgo from 'react-native-timeago';
 import FitImage from 'react-native-fit-image';
@@ -17,6 +17,7 @@ import { Actions, ActionConst } from 'react-native-router-flux';
 import KeyboardSpacer from 'react-native-keyboard-spacer';
 import FileSystem from 'react-native-filesystem';
 //import HideableView from 'react-native-hideable-view';
+import ImagePicker from 'react-native-image-picker';
 
 // Import My Own Libraries
 import { hello, getImage, contentSnippet, ipAddress, portAddress, ipPortAddress } from '../../helpers/helpers';
@@ -47,6 +48,7 @@ export default class EditProfilePage extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
+			profileContentData: [],
 			data: [],
 			orientation: isPortrait() ? 'portrait' : 'landscape',
 			appState: AppState.currentState,
@@ -58,6 +60,7 @@ export default class EditProfilePage extends Component {
 			addressValue: "",
 			errorMessage: "",
 			editProfileMessage: "",
+			profilePictureSource: '',
 			usernameSession: '',
 			tokenSession: ''
 		}
@@ -90,15 +93,12 @@ export default class EditProfilePage extends Component {
 
 	// Load Data after Rendering
 	componentDidMount() {
-		
+		this.getDisplayProfile(); // Get Display Profile
 	}
 
 	// Edit Profile Action
 	editProfileAction(usernameValue, passwordValue, emailValue, nameValue, addressValue) {
-    	if (usernameValue == "") {
-    		this.usernameTxt._root.focus();
-    		this.setState({errorMessage: "Your username is empty"})
-    	} else if (passwordValue == "") {
+    	if (passwordValue == "") {
     		this.passwordTxt._root.focus();
     		this.setState({errorMessage: "Your password is empty"})
     	} else if (emailValue == "") {
@@ -123,27 +123,31 @@ export default class EditProfilePage extends Component {
 		        let resultParsed = JSON.parse(result);
 		        let tokenSession = resultParsed.tokenSession;
 		        
-		        return fetch(ipPortAddress() + '/api/update_profile', {
-				  method: 'POST',
-				  headers: {
-				    'Accept': 'application/json',
-				    'Content-Type': 'application/json',
-				    'x-token': tokenSession
-				  },
-				  body: JSON.stringify({
-				    user_id: usernameValue,
-				    password: passwordValue,
-				    email: emailValue,
-				    name: nameValue,
-				    address: addressValue,
-				    deliv_addr: 'aaa',
-				    account_no: 'aaa',
-				    bank_name: 'aaa'
-				  })
+		        var data = new FormData();
+				data.append('user_id', this.state.usernameSession);
+				data.append('password', passwordValue);
+				data.append('email', emailValue);
+				data.append('name', nameValue);
+				data.append('address', addressValue);
+				data.append('deliv_addr', '');
+				data.append('account_no', '');
+				data.append('bank_account', '');
+				data.append('prof_pic', {
+				  uri: this.state.profilePictureSource.uri,
+				  type: 'image/jpeg', // profilePictureSource.type
+				  name: this.state.profilePictureSource.fileName
+				});
+
+				return fetch(ipPortAddress() + '/api/update_profile', {  
+					method: 'POST',
+					headers: {
+						'x-token': tokenSession
+					},
+					body: data
 				})
 				.then((response) => response.json())
-		    	.then((responseJson) => {
-		    		//alert(JSON.stringify(responseJson));
+				.then((responseJson) => {
+					//alert(JSON.stringify(responseJson));
 
 		    		//this.setState({loginMessage: responseJson.message}); // Get the data from API
 
@@ -178,16 +182,94 @@ export default class EditProfilePage extends Component {
 		    			this.usernameTxt._root.focus();
 		    			this.setState({errorMessage: responseJson.message})
 		    		}
+				})
+				.catch((error) => {
+					alert(error);
+				});
+		    }
+		});  	
+	}
+
+	// Upload Photo
+    uploadPhotoButton() {
+    	/**
+		 * The first arg is the options object for customization (it can also be null or omitted for default options),
+		 * The second arg is the callback which sends object: response (more info below in README)
+		 */
+
+		// More info on all the options is below in the README...just some common use cases shown here
+		var options = {
+		  /*title: 'Select Avatar',
+		  customButtons: [
+		    {name: 'fb', title: 'Choose Photo from Facebook'},
+		  ],*/
+		  	quality: 1.0,
+      		maxWidth: 500,
+      		maxHeight: 500,
+			storageOptions: {
+		    	skipBackup: true,
+		    	path: 'images'
+		  	}
+		};
+
+		ImagePicker.showImagePicker(options, (response) => {
+		  //alert('Response = ', response);
+
+		  if (response.didCancel) {
+		    //alert('User cancelled image picker');
+		  }
+		  else if (response.error) {
+		    //alert('ImagePicker Error: ', response.error);
+		  }
+		  else if (response.customButton) {
+		    //alert('User tapped custom button: ', response.customButton);
+		  }
+		  else {
+		    let source = { uri: response.uri, fileName: response.fileName, type: response.type };
+
+		    // You can also display the image using data:
+		    // let source = { uri: 'data:image/jpeg;base64,' + response.data };
+
+		    //alert(source.uri);
+
+		    this.setState({
+		      profilePictureSource: source
+		    });
+		  }
+		});
+    }
+
+    // Get Display Profile
+    getDisplayProfile() {
+    	// AsyncStorage - Save Data to Session Storage
+	    AsyncStorage.getItem('usernameTokenSession', (error, result) => {
+            if (result) {
+                let resultParsed = JSON.parse(result);
+                let usernameSession = resultParsed.usernameSession;
+                let tokenSession = resultParsed.tokenSession;
+                
+                return fetch(ipPortAddress() + '/api/display_profile', {
+				  method: 'POST',
+				  headers: {
+				    'Accept': 'application/json',
+				    'Content-Type': 'application/json',
+				  },
+				  body: JSON.stringify({
+				  	user_id: usernameSession,
+				    token: tokenSession,
+				  })
+				})
+				.then((response) => response.json())
+		    	.then((responseJson) => {
+		    		this.setState({profileContentData: responseJson}); // Get the data from API
 		    	})
 		    	.catch((error) => {
 		    		//console.error(error);
 		    		
 		    		alert(error);
 		    	});
-		    }
-		});
-
-    	
+            }
+	    });
 	}
 
 	// Read Enter Key Username
@@ -255,8 +337,12 @@ export default class EditProfilePage extends Component {
 		        			<Content>
 				        		
 		        				<Form>
+						            <TouchableOpacity onPress={() => {this.uploadPhotoButton()}} style={{alignItems: 'center'}}>
+					            		<Image source = {{uri: this.state.profilePictureSource ? this.state.profilePictureSource.uri : 'https://www.sparklabs.com/forum/styles/comboot/theme/images/default_avatar.jpg'}} style={{width: 150, height: 150}} />
+					            	</TouchableOpacity>
+
 						            <Item floatingLabel>
-						              <Label>Username</Label>
+						              <Label>Username: {this.state.usernameSession}</Label>
 						              <Input
 						              	onChangeText={(text) => this.setState({usernameValue: text})}
 						            	value={this.state.usernameValue}
@@ -265,6 +351,7 @@ export default class EditProfilePage extends Component {
 						            	maxLength={20}
 						            	returnKeyType={'next'}
 						            	/*placeholder={'Username'}*/
+						            	editable={false}
 						            	enablesReturnKeyAutomatically={true}
 						            	selectionColor={'#233F4A'}
 						            	placeholderTextColor={'#233F4A'}
@@ -276,7 +363,7 @@ export default class EditProfilePage extends Component {
 						            </Item>
 
 						            <Item floatingLabel last>
-						              <Label>Password</Label>
+						              <Label>Password: **********</Label>
 						              <Input
 						              	onChangeText={(text) => this.setState({passwordValue: text})}
 				                    	value={this.state.passwordValue}
@@ -296,7 +383,7 @@ export default class EditProfilePage extends Component {
 						            </Item>
 
 						            <Item floatingLabel last>
-						              <Label>Email</Label>
+						              <Label>Email: {this.state.profileContentData.email}</Label>
 						              <Input
 						              	onChangeText={(text) => this.setState({emailValue: text})}
 				                    	value={this.state.emailValue}
@@ -316,7 +403,7 @@ export default class EditProfilePage extends Component {
 						            </Item>
 
 						            <Item floatingLabel last>
-						              <Label>Name</Label>
+						              <Label>Name: {this.state.profileContentData.name}</Label>
 						              <Input
 						              	onChangeText={(text) => this.setState({nameValue: text})}
 				                    	value={this.state.nameValue}
@@ -336,7 +423,7 @@ export default class EditProfilePage extends Component {
 						            </Item>
 
 						            <Item floatingLabel last>
-						              <Label>Address</Label>
+						              <Label>Address: {this.state.profileContentData.address}</Label>
 						              <Input
 						              	onChangeText={(text) => this.setState({addressValue: text})}
 				                    	value={this.state.addressValue}
@@ -360,7 +447,7 @@ export default class EditProfilePage extends Component {
 						        	<Text>{this.state.errorMessage}</Text>
 						        </View>
 
-						        <Text>{this.state.tokenSession}</Text>
+						        {/*<Text>{this.state.tokenSession}</Text>*/}
 
 						        {/*this.myKeyboardSpacer()*/}
 

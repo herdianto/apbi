@@ -490,8 +490,23 @@ export default class AddCommentForumPage extends Component {
     	var forum_posted_by = this.props.forumPostedBy;
     	var forum_last_update_date = this.props.forumLastUpdateDate;
     	var forum_last_update_by = this.props.forumLastUpdateBy;
+    	var forum_picture = this.props.forum_picture;
+    	var forum_picture_full = ipPortAddress() + forum_picture + '?token=' + this.state.tokenSession;
     	var profile_picture = this.props.profilePicture;
     	var total_comment = this.state.newTotalComment;
+
+    	// Display Forum Image
+    	if (forum_picture != '/forum_images/') {
+    		var displayForumImage = () => {
+    			return (
+    				<CardItem>
+		        		<FitImage source = {{uri: forum_picture_full}} style={{width: 150, height: 150}} />
+		        	</CardItem>
+    			)
+    		}
+    	} else {
+    		var displayForumImage = () => {}
+    	}
 
     	let forumCommentResult = this.state.forumContentCommentData.map((forumCommentDetail, index) => {
 	    	var forum_comment_id = forumCommentDetail.id;
@@ -555,9 +570,7 @@ export default class AddCommentForumPage extends Component {
 					        		</Left>
 					        	</CardItem>
 
-					        	<CardItem>
-					        		<FitImage source = {{uri: profile_picture}} />
-					        	</CardItem>
+					        	{displayForumImage()}
 
 					        	<CardItem content>
 					        		<HTMLView value = {forum_content} />
@@ -602,9 +615,9 @@ export default class AddCommentForumPage extends Component {
 
 					        
 
-					        <Text>{this.state.currentCount}</Text>
+					        {/*<Text>{this.state.currentCount}</Text>*/}
 
-					        <Text>{this.state.tokenSession}</Text>
+					        {/*<Text>{this.state.tokenSession}</Text>*/}
 						
 						</Content>
 
