@@ -294,9 +294,9 @@ var forum_service = {
     let limit = config.select_limit.thread;
     waterfall([
       function getAllThread(threads){
-        let query_cmd_select = "SELECT t1.*, t2.content as a, t2.user_id as b, t2.posted_date as c, t2.interaction_id as d FROM (SELECT forum_id, title, content, posted_date, posted_by, last_update_by, last_update_date, picture "+
-        "FROM forum "+
-        "WHERE DATE(posted_date) BETWEEN ? AND ? AND posted_by LIKE ? AND status='active' ORDER BY posted_date DESC limit ?,?) t1 LEFT JOIN forum_interaction t2 ON t2.forum_id = t1.forum_id";
+        let query_cmd_select = "SELECT t1.*, t2.content as a, t2.user_id as b, t2.posted_date as c, t2.interaction_id as d FROM (SELECT forum_id, title, content, posted_date, posted_by, last_update_by, last_update_date, picture, apbi_user.prof_pic "+
+        "FROM forum, apbi_user "+
+        "WHERE apbi_user.user_id = forum.posted_by AND DATE(posted_date) BETWEEN ? AND ? AND posted_by LIKE ? AND status='active' ORDER BY posted_date DESC limit ?,?) t1 LEFT JOIN forum_interaction t2 ON t2.forum_id = t1.forum_id";
         let page = qry.page;
         if (page < 1) page = 1; 
         let posted_by = ((qry.posted_by == "") ? "%" : qry.posted_by);
@@ -325,6 +325,7 @@ var forum_service = {
                 forum.posted_by = data[j].posted_by;
                 forum.last_update_by = data[j].last_update_by;
                 forum.last_update_date = data[j].last_update_date;
+                forum.user_image = "/api/images/user/"+data[j].prof_pic;
                 forum.picture = "/forum_images/"+data[j].picture;
                 comment.id = data[j].d;
                 comment.content = data[j].a;
