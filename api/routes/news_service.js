@@ -130,7 +130,7 @@ var news_service = {
         let page = qry.page;
         if (page < 1) page = 1; 
         let query_cmd_select = "SELECT news_id, title, status, content, posted_date, posted_by, last_update_date, last_update_by, picture, apbi_user.prof_pic "+
-         "FROM news, apbi_user  WHERE status = 'active' AND apbi_user.user_id = news.posted_by limit ?,?";
+         "FROM news, apbi_user  WHERE status = 'active' AND apbi_user.user_id = news.posted_by order by posted_date desc limit ?,?";
         let params_select =[(page-1)*limit, limit];
         let news = new Array();
         query(mysql.format(query_cmd_select, params_select)).then(function(data){
