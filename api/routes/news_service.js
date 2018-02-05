@@ -9,7 +9,6 @@ var waterfall = require('a-sync-waterfall');
 
 var news_service = {
   post_news: function(req, res){
-    let data = req.body;
     waterfall([
       function getID(id){
         let query_cmd_select = "SELECT CONCAT('newsID_',ifnull(max(CAST(SUBSTRING(news_id,8,30) as UNSIGNED)),0)+1) as news_id from news";
@@ -17,11 +16,38 @@ var news_service = {
           id(null, result_1[0].news_id);
         });
       },
-      function insertNews(id, result){
+      function upload_picture(id, isUploaded){
+        let pic = '';
+        //let decoded = jwt.decode(req.headers["x-token"], config.jwt_signature);
+        var storage = multer.diskStorage({
+        destination: function(req, file, callback){
+          callback(null, './static/news_images');
+        },
+        filename: function(req, file, callback){
+          //if(decoded.user == req.body.user_id){
+            pic = id+path.extname(file.originalname);
+            callback(null, pic);
+          //}else{
+          //  callback(null, null);
+          //}
+        }
+        });
+        var upload = multer({storage: storage}).array('news_pic', 1); //max can upload 1 photo
+        upload(req, res, function(err){
+          if(!err){
+            isUploaded(null, id, pic);
+          }else{
+            isUploaded(null, id, null);
+          }
+        });
+      },
+      function insertNews(id, pic, result){
+        let data = req.body;
         let current_time = new Date();
-        let user_name = jwt.decode(data.token, config.jwt_signature).user;
-        let params_insert =[id, data.title, data.content, current_time, user_name, 'active'];
-        let query_cmd_insert = "INSERT INTO news (news_id, title, content, posted_date, posted_by, status) values (?,?,?,?,?,?);"
+        let user_name = jwt.decode(req.headers["x-token"], config.jwt_signature).user;
+        let params_insert =[id, data.title, data.content, current_time, user_name, pic, 'active'];
+        let query_cmd_insert = "INSERT INTO news (news_id, title, content, posted_date, posted_by, picture, status) values (?,?,?,?,?,?,?);"
+        console.log(mysql.format(query_cmd_insert, params_insert));
         query(mysql.format(query_cmd_insert, params_insert)).then(function(res){
           if(res.affectedRows > 0){
             result(null, "success");
@@ -98,11 +124,14 @@ var news_service = {
     let body = req.body;
     let qry = req.query;
     let current_time = new Date();
+    let limit = config.select_limit.news;
     waterfall([
       function getNews(threads){
-        let query_cmd_select = "SELECT news_id, title, status, content, posted_date, posted_by, last_update_date, last_update_by "+
-         "FROM news WHERE status = 'active'";
-        let params_select =[];
+        let page = qry.page;
+        if (page < 1) page = 1; 
+        let query_cmd_select = "SELECT news_id, title, status, content, posted_date, posted_by, last_update_date, last_update_by, picture, apbi_user.prof_pic "+
+         "FROM news, apbi_user  WHERE status = 'active' AND apbi_user.user_id = news.posted_by limit ?,?";
+        let params_select =[(page-1)*limit, limit];
         let news = new Array();
         query(mysql.format(query_cmd_select, params_select)).then(function(data){
           res.status(config.http_code.ok);
@@ -113,9 +142,17 @@ var news_service = {
             about.content = data[i].content;
             about.posted_date = data[i].posted_date;
             about.posted_by = data[i].posted_by;
+            about.user_picture = data[i].prof_pic;
             about.status = data[i].status;
             about.last_update_by = data[i].last_update_by;
             about.last_update_date = data[i].last_update_date;
+            about.picture = data[i].picture;
+            if(about.picture != "" && about.picture != null){
+              about.picture = "/news_images/"+data[i].picture;
+            }
+            if(about.user_picture != "" && about.user_picture != null){
+              about.user_picture = "/api/images/user"+data[i].user_picture;
+            }
             news[i] = about;
           }
           res.json(news);

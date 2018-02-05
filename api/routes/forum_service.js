@@ -40,7 +40,7 @@ var forum_service = {
           }
         });
       },function insertforum(id, pic, insert){
-        data = req.body;
+        let data = req.body;
         let current_time = new Date();
         let user_name = jwt.decode(req.headers['x-token'], config.jwt_signature).user;
         let params_insert =[id, data.title, data.content, current_time, user_name, 'active', pic];

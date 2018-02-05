@@ -9,7 +9,6 @@ var waterfall = require('a-sync-waterfall');
 
 var about_service = {
   post_about: function(req, res){
-    let data = req.body;
     waterfall([
       function getID(id){
         let query_cmd_select = "SELECT CONCAT('aboutID_',ifnull(max(CAST(SUBSTRING(about_id,9,30) as UNSIGNED)),0)+1) as about_id from about;";
@@ -17,11 +16,38 @@ var about_service = {
           id(null, result_1[0].about_id);
         });
       },
-      function insertforum(id, result){
+      function upload_picture(id, isUploaded){
+        let pic = '';
+        //let decoded = jwt.decode(req.headers["x-token"], config.jwt_signature);
+        var storage = multer.diskStorage({
+        destination: function(req, file, callback){
+          callback(null, './static/about_images');
+        },
+        filename: function(req, file, callback){
+          //if(decoded.user == req.body.user_id){
+            pic = id+path.extname(file.originalname);
+            callback(null, pic);
+          //}else{
+          //  callback(null, null);
+          //}
+        }
+        });
+        var upload = multer({storage: storage}).array('about_pic', 1); //max can upload 1 photo
+        upload(req, res, function(err){
+          if(!err){
+            isUploaded(null, id, pic);
+          }else{
+            isUploaded(null, id, null);
+          }
+        });
+      },
+      function insertforum(id, pic, result){
         let current_time = new Date();
-        let user_name = jwt.decode(data.token, config.jwt_signature).user;
-        let params_insert =[id, data.title, data.content, current_time, user_name, 'active'];
-        let query_cmd_insert = "INSERT INTO about (about_id, title, content, posted_date, posted_by, status) values (?,?,?,?,?,?);"
+        let data = req.body;
+        let user_name = jwt.decode(req.headers['x-token'], config.jwt_signature).user;
+        let params_insert =[id, data.title, data.content, current_time, user_name, 'active', pic];
+        let query_cmd_insert = "INSERT INTO about (about_id, title, content, posted_date, posted_by, status, picture) values (?,?,?,?,?,?,?);"
+        console.log(mysql.format(query_cmd_insert, params_insert));
         query(mysql.format(query_cmd_insert, params_insert)).then(function(res){
           if(res.affectedRows > 0){
             result(null, "success");
@@ -100,8 +126,8 @@ var about_service = {
     let current_time = new Date();
     waterfall([
       function getAbout(threads){
-        let query_cmd_select = "SELECT about_id, title, content, posted_date, posted_by, last_update_date, last_update_by "+
-         "FROM about WHERE status = 'active' LIMIT 1";
+        let query_cmd_select = "SELECT about_id, title, content, posted_date, posted_by, last_update_date, last_update_by, picture, apbi_user.prof_pic "+
+         "FROM about, apbi_user WHERE status = 'active' AND about.posted_by = apbi_user.user_id order by posted_date DESC LIMIT 1";
         let params_select =[];
         let about = {};
         query(mysql.format(query_cmd_select, params_select)).then(function(data){
@@ -112,8 +138,16 @@ var about_service = {
             about.content = data[i].content;
             about.posted_date = data[i].posted_date;
             about.posted_by = data[i].posted_by;
+            about.user_picture = data[i].prof_pic;
             about.last_update_by = data[i].last_update_by;
             about.last_update_date = data[i].last_update_date;
+            about.picture = data[i].picture;
+            if(about.picture != "" && about.picture != null){
+              about.picture = "/about_images/"+data[i].picture;
+            }
+            if(about.user_picture != "" && about.user_picture != null){
+              about.user_picture = "/api/images/user"+data[i].user_picture;
+            }
           }
           res.json(about);
         }).catch(function(error){
