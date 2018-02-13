@@ -171,6 +171,50 @@ var user_service = {
       });
       
     },
+    update_password: function(req, res){
+      let decoded="";
+      try{
+        decoded = jwt.decode(req.headers["x-token"], config.jwt_signature);
+      }catch(error){
+        console.log("error: "+error);
+        res.status(config.http_code.unauthorized);
+        res.json({
+          "status": config.http_code.unauthorized,
+          "message": "Invalid Token!!"
+        });
+        return;
+      }
+
+      let params=req.body;
+      //console.log(decoded.user+"-"+params.user_id);
+      if(decoded.user == params.user_id){
+        if(params.new_password == params.retype_new_password){
+          let params_update = [params.new_password, decoded.user];
+          let query_update = 'UPDATE apbi_user set password=md5(?) WHERE user_id = ?';
+          query(mysql.format(query_update, params_update))
+          .then(function(result){
+          res.status(config.http_code.ok);
+          res.json({
+              "status": config.http_code.ok,
+              "message": "Successfully Updated"
+            })
+          }); 
+        }
+        else{
+          res.status(config.http_code.unauthorized);
+          res.json({
+            "status": config.http_code.unauthorized,
+            "message": "Type same password!!!"
+          });
+        }
+      }else{
+        res.status(config.http_code.unauthorized);
+        res.json({
+          "status": config.http_code.unauthorized,
+          "message": "Unauthorized"
+        });
+      }
+    },
     update_profile: function(req, res){
       try{
         let prof_pic = '';
@@ -201,8 +245,8 @@ var user_service = {
         else{
           let params=req.body;
           if(decoded.user == params.user_id){
-            let params_update = [prof_pic, params.name, params.address, params.email, params.password, params.deliv_addr, params.account_no, params.bank_name, decoded.user];
-            let query_update = 'UPDATE apbi_user set prof_pic=?, name=?, address=?, email=?, password=md5(?), delivery_addr=?, account_no=?, bank_name=? ' +
+            let params_update = [prof_pic, params.name, params.address, params.email, params.deliv_addr, params.account_no, params.bank_name, decoded.user];
+            let query_update = 'UPDATE apbi_user set prof_pic=?, name=?, address=?, email=?, delivery_addr=?, account_no=?, bank_name=? ' +
             'WHERE user_id = ?';
             query(mysql.format(query_update, params_update))
             .then(function(result){

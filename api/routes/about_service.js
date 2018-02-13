@@ -144,9 +144,13 @@ var about_service = {
             about.picture = data[i].picture;
             if(about.picture != "" && about.picture != null){
               about.picture = "/about_images/"+data[i].picture;
+            }else{
+              about.picture = null;
             }
             if(about.user_picture != "" && about.user_picture != null){
               about.user_picture = "/api/images/user"+data[i].user_picture;
+            }else{
+              about.user_picture = null;
             }
           }
           res.json(about);

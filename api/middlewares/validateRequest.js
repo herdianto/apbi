@@ -82,11 +82,10 @@ module.exports = function(req, res, next) {
             }
         } catch (error) {
             console.log(error);
-            res.status(500);
+            res.status(401);
             res.json({
-                "status": 500,
-                "message": "Oops something went wrong",
-                "error": error
+                "status": 401,
+                "message": "Invalid Token!!!"
             });
         }
     } else {

@@ -9,6 +9,7 @@ var forum_service = require('./forum_service');
 var about_service = require('./about_service');
 var news_service = require('./news_service');
 var helper_service = require('./helper_service');
+var contact_service = require('./contact_service');
 
 //favicon.ico request
 router.get('/favicon.ico', function(req, res) {
@@ -20,6 +21,7 @@ router.get('/favicon.ico', function(req, res) {
 
 //helper service
 router.post('/api/admin/helper/upload_images', helper_service.upload_images);
+router.get('/helper/get_images/:page', helper_service.get_images);
 
 //user service
 router.post('/login', auth.login);
@@ -28,6 +30,7 @@ router.post('/forget', user_service.forget);
 router.get('/forget_action', user_service.apply_password);
 router.post('/api/refresh_token', auth.renew_token);
 router.post('/api/update_profile', user_service.update_profile);
+router.post('/api/update_password', user_service.update_password);
 router.post('/api/admin/member_approval', user_service.set_member_status);
 router.get('/api/admin/member_list', user_service.get_member_list);
 router.post('/api/display_profile', user_service.display_profile);
@@ -66,5 +69,9 @@ router.post('/api/forum/delete_comment', forum_service.delete_comment);
 router.get('/api/forum/view_thread', forum_service.view_thread);
 router.get('/api/forum/get_comment', forum_service.get_comment);
 
+//contact_us service
+router.post('/contact_us/post_complaint', contact_service.post_complaint);
+router.get('/api/admin/contact_us/view_complaint/:page', contact_service.view_complaint);
+router.post('/api/admin/contact_us/update_complaint', contact_service.update_complaint);
 
 module.exports = router;

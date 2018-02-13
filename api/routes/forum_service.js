@@ -325,8 +325,18 @@ var forum_service = {
                 forum.posted_by = data[j].posted_by;
                 forum.last_update_by = data[j].last_update_by;
                 forum.last_update_date = data[j].last_update_date;
-                forum.user_image = "/api/images/user/"+data[j].prof_pic;
-                forum.picture = "/forum_images/"+data[j].picture;
+                forum.user_image = data[j].prof_pic;
+                forum.picture = data[j].picture;
+                if(forum.picture != "" && forum.picture != null){
+                  forum.picture = "/news_images/"+data[i].picture;
+                }else{
+                  forum.picture = null;
+                }
+                if(forum.user_image != "" && forum.user_image != null){
+                  forum.user_image = "/api/images/user"+data[i].prof_pic;
+                }else{
+                  forum.user_image = null;
+                }
                 comment.id = data[j].d;
                 comment.content = data[j].a;
                 comment.user_id = data[j].b;

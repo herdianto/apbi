@@ -32,6 +32,8 @@
         "thread": 5,
         "transaction" : 2,
         "news": 2,
-        "about": 1
+        "about": 1,
+        "images":5,
+        "complaint":3
     }
 }
