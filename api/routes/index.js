@@ -8,6 +8,7 @@ var product_service = require('./product_service');
 var forum_service = require('./forum_service');
 var about_service = require('./about_service');
 var news_service = require('./news_service');
+var helper_service = require('./helper_service');
 
 //favicon.ico request
 router.get('/favicon.ico', function(req, res) {
@@ -16,6 +17,9 @@ router.get('/favicon.ico', function(req, res) {
     //res.status(config.http_code.ok);
     //res.res.sendFile('../favicon.png');
 });
+
+//helper service
+router.post('/api/admin/helper/upload_images', helper_service.upload_images);
 
 //user service
 router.post('/login', auth.login);
