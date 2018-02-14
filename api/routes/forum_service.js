@@ -328,12 +328,12 @@ var forum_service = {
                 forum.user_image = data[j].prof_pic;
                 forum.picture = data[j].picture;
                 if(forum.picture != "" && forum.picture != null){
-                  forum.picture = "/news_images/"+data[i].picture;
+                  forum.picture = "/forum_images/"+data[i].picture;
                 }else{
                   forum.picture = null;
                 }
                 if(forum.user_image != "" && forum.user_image != null){
-                  forum.user_image = "/api/images/user"+data[i].prof_pic;
+                  forum.user_image = "/api/images/user/"+data[i].prof_pic;
                 }else{
                   forum.user_image = null;
                 }
