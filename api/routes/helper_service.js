@@ -81,9 +81,14 @@ var helper_service = {
   },
   get_images: function(req, res){
     let page = req.params.page;
+    let query_cmd = "";
+    if(page == 'all'){
+      query_cmd = "SELECT * FROM public_images";
+    }else{
+      query_cmd = "SELECT * FROM public_images limit ?,?";
+    }
     if (page < 1) page = 1; 
     let limit = config.select_limit.images;
-    let query_cmd = "SELECT * FROM public_images limit ?,?";
     let query_params = [(page-1)*limit, limit];
     let images = new Array();
     //console.log(page+"aa"+limit);
