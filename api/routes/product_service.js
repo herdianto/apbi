@@ -556,10 +556,19 @@ var product_service = {
     let obat = new Object();
     waterfall([
       function getMasterProduct(callback){
+        let page = req.params.page;
         let limit = config.select_limit.product;
-        let page_number = req.params.page;
-        let params_select =[(page_number-1)*limit, limit];
-        let query_cmd_select = "SELECT * FROM product LIMIT ?,?;"
+        let page_number=page;
+        let params_select =[];
+        let query_cmd_select = ""
+        if(page_number == 'all'){
+          query_cmd_select = "SELECT * FROM product"
+        }else{
+          if(page_number<=0){page_number=1}
+          params_select =[(page_number-1)*limit, limit];
+          query_cmd_select = "SELECT * FROM product LIMIT ?,?;"
+        }
+        console.log(mysql.format(query_cmd_select, params_select));
         query(mysql.format(query_cmd_select, params_select)).
           then(function(result){
             for(let i=0; i<result.length; i++){
