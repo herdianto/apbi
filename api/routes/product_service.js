@@ -496,13 +496,21 @@ var product_service = {
         transaction_list.product = products;
         transaction_lists[h] = transaction_list;
       }
-      let transaction_lists2 = new Array();
-      let frm = (page_number-1)*limit;
-      let to = frm + limit;
+      let frm = 0;
+      let to = 0;
+      if(page_number == 'all'){
+        frm = 0;
+        to = transaction_lists.length;
+      }else{
+        frm = (page_number-1)*limit;
+        to = frm + limit;
+      }
+
       if(to>transaction_lists.length){
         to = transaction_lists.length;
       }
-      console.log("from: "+frm +" to: "+to);
+      let transaction_lists2 = new Array();
+      console.log("admin: from: "+frm +" to: "+to);
       let counter = 0;
       for(let i=frm; i<to; i++){
         let transaction_list2 =  new Object();
