@@ -8,6 +8,7 @@ var randomstring = require("randomstring");
 var jwt = require('jwt-simple');
 var md5 = require('md5');
 var config = require('../config/config.json');
+var waterfall = require('a-sync-waterfall');
 
 var user_service = {
     validate: function(req, result) {
@@ -171,49 +172,126 @@ var user_service = {
       });
       
     },
+    checkPasswordComplexity: function(password){
+      var anUpperCase = /[A-Z]/;
+      var aLowerCase = /[a-z]/; 
+      var aNumber = /[0-9]/;
+      var aSpecial = /[!|@|#|$|%|^|&|*|(|)|-|_]/;
+      //console.log(password.length);
+      if(password.length < 8){
+        return false;
+      }
+      var numUpper = 0;
+      var numLower = 0;
+      var numNums = 0;
+      var numSpecials = 0;
+      for(var i=0; i<password.length; i++){
+          if(anUpperCase.test(password[i]))
+              numUpper++;
+          else if(aLowerCase.test(password[i]))
+              numLower++;
+          else if(aNumber.test(password[i]))
+              numNums++;
+          else if(aSpecial.test(password[i]))
+              numSpecials++;
+      }
+      //console.log(numUpper+" "+numLower+" "+numNums+" "+numSpecials);
+      if(numUpper < 1 || numLower < 1 || numNums < 1 || numSpecials <1){
+        return false;
+      }
+      return true;
+    },
     update_password: function(req, res){
-      let decoded="";
-      try{
-        decoded = jwt.decode(req.headers["x-token"], config.jwt_signature);
-      }catch(error){
-        console.log("error: "+error);
+      let params=req.body;
+      let decoded = jwt.decode(req.headers["x-token"], config.jwt_signature);
+      //console.log(decoded.user+""+params.user_id);
+      if(decoded.user != params.user_id){
         res.status(config.http_code.unauthorized);
-        res.json({
-          "status": config.http_code.unauthorized,
-          "message": "Invalid Token!!"
-        });
+            res.json({
+              "status": config.http_code.unauthorized,
+              "message": "Unauthorized!"
+            });
+        return;
+      }
+      if(params.new_password != params.retype_new_password){
+        res.status(config.http_code.unauthorized);
+            res.json({
+              "status": config.http_code.unauthorized,
+              "message": "Retype same password!"
+            });
+        return;
+      }
+      if(params.new_password == params.old_password){
+        res.status(config.http_code.unauthorized);
+            res.json({
+              "status": config.http_code.unauthorized,
+              "message": "Choose different password!"
+            });
         return;
       }
 
-      let params=req.body;
-      //console.log(decoded.user+"-"+params.user_id);
-      if(decoded.user == params.user_id){
-        if(params.new_password == params.retype_new_password){
+      waterfall([
+        function checkComplexity(isComplex){
+          if(user_service.checkPasswordComplexity(params.new_password)){
+            //console.log("there");
+            isComplex(null,1);
+          }else{
+            //console.log("here");
+            isComplex(1,0);
+          }
+        },
+        function checkOldpassword(isComplex, isPassSame){
+          let params_cmd = [decoded.user, params.old_password];
+          let query_cmd = 'SELECT count(user_id) as no FROM apbi_user WHERE user_id=? AND password = md5(?)';
+          query(mysql.format(query_cmd, params_cmd)).then(function(result){
+            if(result[0].no == 1){
+              isPassSame(null, 1);
+            }else{
+              isPassSame(2, 0);
+            }
+          })
+        },
+        function updatePassword(isPassSame, isUpdated){
           let params_update = [params.new_password, decoded.user];
           let query_update = 'UPDATE apbi_user set password=md5(?) WHERE user_id = ?';
-          query(mysql.format(query_update, params_update))
-          .then(function(result){
+          query(mysql.format(query_update, params_update)).then(function(result){
+            isUpdated(null, 1);
+          }).catch(function(err){
+            isUpdated(3,0);
+          });
+        }
+      ],
+      function (err, result){
+        if(err == null){
           res.status(config.http_code.ok);
           res.json({
               "status": config.http_code.ok,
               "message": "Successfully Updated"
             })
-          }); 
+        }else{
+          if(err == 1){
+            res.status(config.http_code.unauthorized);
+            res.json({
+              "status": config.http_code.unauthorized,
+              "message": "Password not complex enough"
+            });
+          }else if(err == 2){
+            res.status(config.http_code.unauthorized);
+            res.json({
+              "status": config.http_code.unauthorized,
+              "message": "Check your old password"
+            });
+          }
+          else{
+            res.status(config.http_code.in_server_err);
+            res.json({
+              "status": config.http_code.in_server_err,
+              "message": "Internal server error"
+            });
+          }
         }
-        else{
-          res.status(config.http_code.unauthorized);
-          res.json({
-            "status": config.http_code.unauthorized,
-            "message": "Type same password!!!"
-          });
-        }
-      }else{
-        res.status(config.http_code.unauthorized);
-        res.json({
-          "status": config.http_code.unauthorized,
-          "message": "Unauthorized"
-        });
       }
+    );
     },
     update_profile: function(req, res){
       try{
