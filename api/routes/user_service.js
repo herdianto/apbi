@@ -126,6 +126,14 @@ var user_service = {
       let current_time = new Date();
       let params = new Array();
       let param_values = req.body;
+      if(!user_service.checkPasswordComplexity(param_values.password)){
+          res.status(config.http_code.unauthorized);
+          res.json({
+            "status": config.http_code.unauthorized,
+            "message": "Password not complex enough"
+          });
+        return;
+      }
       date.format(current_time, 'YYYY-MM-DD HH:mm:ss');
       params_insert = [param_values.user_id,param_values.name,param_values.address,param_values.email,param_values.password,current_time];
       params_check = [param_values.user_id];
