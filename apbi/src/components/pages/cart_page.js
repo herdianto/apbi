@@ -53,11 +53,13 @@ export default class CartPage extends Component {
 			data: [],
 			cartList: [],
 			newCartList: [],
+			productID: this.props.productID,
 			orientation: isPortrait() ? 'portrait' : 'landscape',
 			appState: AppState.currentState,
 			usernameLogin: '',
 			usernameSession: '',
-			tokenSession: ''
+			tokenSession: '',
+			pageSession: ''
 		}
 
 		// AsyncStorage - Save Data to Session Storage
@@ -66,7 +68,8 @@ export default class CartPage extends Component {
               	let resultParsed = JSON.parse(result)
               	this.setState({
                 	usernameSession: resultParsed.usernameSession,
-                  	tokenSession: resultParsed.tokenSession
+                  	tokenSession: resultParsed.tokenSession,
+                  	pageSession: resultParsed.pageSession
               	});
           	}
 	    });
@@ -87,11 +90,30 @@ export default class CartPage extends Component {
 	}
 
 	componentDidMount() {
-		this.setState({cartList: this.props.cartList});
+		// Modify Left and Right Button
+        Actions.refresh({
+        	//title: this.props.product_name,
+        	renderBackButton: this.renderLeftButton,
+        	//renderRightButton: this.renderRightButton
+        });
+
+		this.setState({cartList: this.props.cartList ? this.props.cartList : []});
 
         for(var i = 0; i < this.props.cartList.length; i++) {
 			this.state.newCartList.push({product_id: this.props.cartList[i].product_id, quantity: this.props.cartList[i].quantity}); // Insert product
 		}
+	}
+
+	// Render Left Button
+	renderLeftButton = () => {
+	    return (
+	    	<Icon name="arrow-back" onPress={() => {this.backButton()}} style={{color: '#fff'}} />
+	    )
+	}
+
+	// Back Button
+	backButton() {
+		Actions.product_detail_page({cartList: this.state.cartList, productID: this.state.productID});
 	}
 
 	// Pay Order Product Action
@@ -100,7 +122,9 @@ export default class CartPage extends Component {
 		AsyncStorage.getItem('usernameTokenSession', (error, result) => {
 		    if (result) {
 		        let resultParsed = JSON.parse(result);
-		        let tokenSession = resultParsed.tokenSession;
+		        let usernameSession = resultParsed.usernameSession;
+              	let tokenSession = resultParsed.tokenSession;
+              	let pageSession = resultParsed.pageSession;
 		        
 		        return fetch(ipPortAddress() + '/api/product/buy', {
 				  method: 'POST',
@@ -123,8 +147,15 @@ export default class CartPage extends Component {
 
 		    			alert(responseJson.message);
 
-		    			this.setState({cartList: [], newCartList: []});
-		    			
+		    			this.setState({
+		    				cartList: [],
+		    				newCartList: []
+		    			});
+
+		    			// Remove Cart
+		    			/*for(var i = 0; i < this.props.cartList.length; i++) {
+							this.props.cartList.pop();
+						}*/
 		    		}
 		    	})
 		    	.catch((error) => {

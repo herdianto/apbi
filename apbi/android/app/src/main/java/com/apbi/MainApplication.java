@@ -3,6 +3,7 @@ package com.apbi;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
+import com.dylanvann.fastimage.FastImageViewPackage;
 import com.lwansbrough.RCTCamera.RCTCameraPackage;
 import com.rnfs.RNFSPackage;
 import fr.bamlab.rnimageresizer.ImageResizerPackage;
@@ -29,6 +30,7 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
+            new FastImageViewPackage(),
             new RCTCameraPackage(),
             new RNFSPackage(),
             new ImageResizerPackage(),

@@ -53,14 +53,16 @@ export default class ProductDetailPage extends Component {
 		this.state = {
 			data: [],
 			cartList: [],
+			productID: this.props.productID,
 			orientation: isPortrait() ? 'portrait' : 'landscape',
 			appState: AppState.currentState,
 			usernameLogin: '',
-			quantityProductValue: '',
+			quantityProductValue: '0',
 			isFocused: false,
 			productDetailData: [],
 			usernameSession: '',
-			tokenSession: ''
+			tokenSession: '',
+			pageSession: ''
 		}
 
 		// AsyncStorage - Save Data to Session Storage
@@ -69,7 +71,8 @@ export default class ProductDetailPage extends Component {
               	let resultParsed = JSON.parse(result)
               	this.setState({
                 	usernameSession: resultParsed.usernameSession,
-                  	tokenSession: resultParsed.tokenSession
+                  	tokenSession: resultParsed.tokenSession,
+                  	pageSession: resultParsed.pageSession
               	});
           	}
 	    });
@@ -110,7 +113,9 @@ export default class ProductDetailPage extends Component {
 		AsyncStorage.getItem('usernameTokenSession', (error, result) => {
 		    if (result) {
 		        let resultParsed = JSON.parse(result);
-		        let tokenSession = resultParsed.tokenSession;
+		        let usernameSession = resultParsed.usernameSession;
+              	let tokenSession = resultParsed.tokenSession;
+              	let pageSession = resultParsed.pageSession;
 		        
 		        return fetch(ipPortAddress() + '/api/product/detail/' + productID, {
 		        	method: 'GET',
@@ -159,16 +164,16 @@ export default class ProductDetailPage extends Component {
 
 	// Go to Cart
 	goToCartAction() {
-    	Actions.cart_page({cartList: this.state.cartList}); // go to Detail Product Page
+    	Actions.cart_page({cartList: this.state.cartList, productID: this.state.productID}); // go to Detail Product Page
     }
 
     // Order Product Action
 	orderProductAction(product_id, product_name, product_member_price, quantity) {
-		if (quantity == "") {
-			this.quantityProductTxt._root.focus();
+		if (quantity == "0") {
+			//this.quantityProductTxt._root.focus();
 			alert("Quantity can not be empty");
 		} else if (quantity > 100) {
-			this.quantityProductTxt._root.focus();
+			//this.quantityProductTxt._root.focus();
 			alert("Max quantity = 100");
 		} else {
 			let markers_cartList = [ ...this.state.cartList ];
@@ -192,16 +197,42 @@ export default class ProductDetailPage extends Component {
 
 		  	alert("Successfully Added to Cart");
 
-		  	this.quantityProductTxt._root.clear();
-		    this.state.quantityProductValue = ""
+		  	//this.quantityProductTxt._root.clear();
+		    //this.state.quantityProductValue = ""
+
+		    this.setState({
+    			quantityProductValue: "0"
+    		});
 		}
+    }
+
+    // Down Quantity Product Action
+    downQuantityProductAction(quantityProductValue) {
+    	var downQuantityProductValue = parseInt(quantityProductValue) - 1;
+        
+        if (downQuantityProductValue < 0) {
+			//alert("Minimum is " + downQuantityProductValue);
+		} else {
+			this.setState({
+    			quantityProductValue: String(downQuantityProductValue)
+    		}); // Get the data from API
+		}
+    }
+
+	// Up Quantity Product Action
+	upQuantityProductAction(quantityProductValue) {
+		var upQuantityProductValue = parseInt(quantityProductValue) + 1;
+
+		this.setState({
+			quantityProductValue: String(upQuantityProductValue)
+		}); // Get the data from API      
     }
 
 	// Read Enter Key Quantity Product
 	handleKeyDownQuantityProduct(e) {
 	    if(e.nativeEvent.key == "Enter"){
 	        this.quantityProductAction(this.state.quantityProductValue);
-	        this.quantityProductTxt._root.clear();
+	        //this.quantityProductTxt._root.clear();
 	    }
 	}
 
@@ -256,9 +287,10 @@ export default class ProductDetailPage extends Component {
 			              <Text>{product_member_price}</Text>
 			            </ListItem>
 
-			            <ListItem>
-			              <Item floatingLabel>
-			              	<Label style={{color: '#000', fontSize: 14}}>Quantity</Label>
+			            <ListItem style={{justifyContent: 'space-between'}}>
+			              <Text>Quantity</Text>
+			              <Item rounded style={{width: 80}}>
+			              	{/*<Label style={{color: '#000', fontSize: 14}}>Quantity</Label>*/}
 				            	<Input
 			                    	style={{color: '#000', textAlign: 'right'}}
 			                    	onChangeText={(text) => this.setState({quantityProductValue: text})}
@@ -277,6 +309,11 @@ export default class ProductDetailPage extends Component {
 			                    	onKeyPress={this.handleKeyDownQuantityProduct.bind(this)}
 			                    	onFocus={this.handleInputFocus}
 			                    />
+
+			                    <View>
+				                    <Icon name="arrow-dropup" onPress={() => {this.upQuantityProductAction(this.state.quantityProductValue)}} />
+				                    <Icon name="arrow-dropdown" onPress={() => {this.downQuantityProductAction(this.state.quantityProductValue)}} />
+			                    </View>
 		                    </Item>
 			            </ListItem>
 			        </List>

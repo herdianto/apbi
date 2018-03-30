@@ -46,7 +46,8 @@ export default class IndexPage extends Component {
 			appState: AppState.currentState,
 			currentCount: 1,
 			usernameSession: '',
-			tokenSession: ''
+			tokenSession: '',
+			pageSession: ''
 		}
 
 		// AsyncStorage - Save Data to Session Storage
@@ -55,7 +56,8 @@ export default class IndexPage extends Component {
               	let resultParsed = JSON.parse(result)
               	this.setState({
                 	usernameSession: resultParsed.usernameSession,
-                  	tokenSession: resultParsed.tokenSession
+                  	tokenSession: resultParsed.tokenSession,
+                  	pageSession: resultParsed.pageSession
               	});
           	}
 	    });
@@ -100,7 +102,13 @@ export default class IndexPage extends Component {
 	      })
 
 	      if (newCount == 0) {
-	      	this.checkToken(); // Check Token
+	      	if (this.state.tokenSession == 'tokenLogout') {
+	      		Actions.tabbar({usernameLogin: this.state.tokenSession});
+		      	Actions.home({usernameLogin: this.state.tokenSession});
+	    		Actions.home_page({usernameLogin: this.state.tokenSession}); // go to Home Page directly without Login
+	      	} else {
+	      		this.checkToken(); // Check Token
+	      	}
 	      }
 	    } else {
 	      clearInterval(this._interval);
@@ -108,19 +116,22 @@ export default class IndexPage extends Component {
 	}
 
 	// Save Data to Session Storage
-	saveDataSession(usernameValue, tokenValue) {
+	saveDataSession(usernameValue, tokenValue, pageValue) {
 	    let usernameSession = usernameValue;
 	    let tokenSession = tokenValue;
+	    let pageSession = pageValue;
 	    let dataSession = {
 	        usernameSession: usernameSession,
-	        tokenSession: tokenSession
+	        tokenSession: tokenSession,
+	        pageSession: pageSession
 	    }
 
 	    AsyncStorage.setItem('usernameTokenSession', JSON.stringify(dataSession));
 
 	    this.setState({
 	        usernameSession: usernameSession,
-	        tokenSession: tokenSession
+	        tokenSession: tokenSession,
+	        pageSession: pageSession
 	    });
 	}
 
@@ -139,11 +150,12 @@ export default class IndexPage extends Component {
 		.then((response) => response.json())
     	.then((responseJson) => {
     		if (responseJson.message == "Successful") {
-    			alert("Successful");
+    			//alert("Successful");
 
-    			this.saveDataSession(responseJson.profile.user_id, responseJson.token); // Save Data to Session Storage
+    			this.saveDataSession(responseJson.profile.user_id, responseJson.token, 'index_page'); // Save Data to Session Storage
 
     			Actions.tabbar({usernameLogin: this.state.tokenSession});
+    			Actions.home({usernameLogin: this.state.tokenSession});
     			Actions.home_page({usernameLogin: this.state.tokenSession}); // go to Home Page directly without Login
     		} else if (responseJson.message == "Token is no longer valid") {
     			alert(responseJson.message);

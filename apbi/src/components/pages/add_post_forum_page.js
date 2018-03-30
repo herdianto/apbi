@@ -10,7 +10,7 @@
 // Import Libraries
 import React, { Component } from 'react';
 import { AppRegistry, Text, Image, Linking, Dimensions, ScrollView, AppState, Platform, View, TouchableOpacity, AsyncStorage } from 'react-native';
-import { Content, Card, CardItem, Body, Left, Thumbnail, Button, Icon, Container, Item, Input, Footer, FooterTab } from 'native-base';
+import { Content, Card, CardItem, Body, Left, Thumbnail, Button, Icon, Container, Item, Input, Row, Col, Footer, FooterTab } from 'native-base';
 import HTMLView from 'react-native-htmlview';
 import TimeAgo from 'react-native-timeago';
 import FitImage from 'react-native-fit-image';
@@ -62,7 +62,8 @@ export default class AddPostForumPage extends Component {
 			contentBoxHeight: 0,
 			forumPictureSource: '',
 			usernameSession: '',
-			tokenSession: ''
+			tokenSession: '',
+			pageSession: ''
 		}
 
 		// AsyncStorage - Save Data to Session Storage
@@ -71,7 +72,8 @@ export default class AddPostForumPage extends Component {
               	let resultParsed = JSON.parse(result)
               	this.setState({
                 	usernameSession: resultParsed.usernameSession,
-                  	tokenSession: resultParsed.tokenSession
+                  	tokenSession: resultParsed.tokenSession,
+                  	pageSession: resultParsed.pageSession
               	});
           	}
 	    });
@@ -135,6 +137,7 @@ export default class AddPostForumPage extends Component {
 	              	let resultParsed = JSON.parse(result);
 	              	let usernameSession = resultParsed.usernameSession;
 	              	let tokenSession = resultParsed.tokenSession;
+	              	let pageSession = resultParsed.pageSession;
 	              	
 	              	var data = new FormData();
 					data.append('user_id', usernameSession);
@@ -170,6 +173,10 @@ export default class AddPostForumPage extends Component {
 				    		this.state.contentForumValue = ""
 
 				    		this.titleForumTxt._root.focus();
+
+				    		this.setState({
+				    			forumPictureSource: ''
+				    		})
 			    			
 			    		}
 			    	})
@@ -313,9 +320,16 @@ export default class AddPostForumPage extends Component {
 			                    />
 		                    </Item>
 
-		                    <TouchableOpacity onPress={() => {this.uploadForumPictureButton()}} style={{alignItems: 'center'}}>
-			            		<Image source = {{uri: this.state.forumPictureSource ? this.state.forumPictureSource.uri : 'https://www.sparklabs.com/forum/styles/comboot/theme/images/default_avatar.jpg'}} style={{width: 150, height: 150}} />
-			            	</TouchableOpacity>
+		                    <Row style={{padding: 10}}>
+		            			<Col>
+						            <Text style={{color: '#000'}}>Add Image</Text>
+						        </Col>
+						        <Col style={{alignItems: 'flex-end'}}>
+				                    <TouchableOpacity onPress={() => {this.uploadForumPictureButton()}} style={{alignItems: 'center'}}>
+					            		<Image source = {{uri: this.state.forumPictureSource ? this.state.forumPictureSource.uri : 'https://www.sparklabs.com/forum/styles/comboot/theme/images/default_avatar.jpg'}} style={{width: 150, height: 150}} />
+					            	</TouchableOpacity>
+					            </Col>
+						    </Row>
 
 		                    {/*<Text>{this.state.tokenSession}</Text>*/}
 						

@@ -58,7 +58,8 @@ export default class LoginPage extends Component {
 			fixedMarginTop: 0,
 			deviceUniqueIDValue: DeviceInfo.getUniqueID(),
 			usernameSession: '',
-			tokenSession: ''
+			tokenSession: '',
+			pageSession: ''
 		}
 
 		// AsyncStorage - Save Data to Session Storage
@@ -67,7 +68,8 @@ export default class LoginPage extends Component {
               	let resultParsed = JSON.parse(result)
               	this.setState({
                 	usernameSession: resultParsed.usernameSession,
-                  	tokenSession: resultParsed.tokenSession
+                  	tokenSession: resultParsed.tokenSession,
+                  	pageSession: resultParsed.pageSession
               	});
           	}
 	    });
@@ -107,22 +109,23 @@ export default class LoginPage extends Component {
 	}
 
 	// Save Data to Session Storage
-	saveDataSession(usernameValue, tokenValue) {
+	saveDataSession(usernameValue, tokenValue, pageValue) {
 	    let usernameSession = usernameValue;
 	    let tokenSession = tokenValue;
+	    let pageSession = pageValue;
 	    let dataSession = {
 	        usernameSession: usernameSession,
-	        tokenSession: tokenSession
+	        tokenSession: tokenSession,
+	        pageSession: pageSession
 	    }
 
 	    AsyncStorage.setItem('usernameTokenSession', JSON.stringify(dataSession));
 
 	    this.setState({
 	        usernameSession: usernameSession,
-	        tokenSession: tokenSession
+	        tokenSession: tokenSession,
+	        pageSession: pageSession
 	    });
-
-	    //alert('Data tersimpan');
 	}
 
 	// Login Action
@@ -156,10 +159,25 @@ export default class LoginPage extends Component {
     	.then((responseJson) => {
     		if (responseJson.message == "Successful") {
 
-    			this.saveDataSession(usernameValue, responseJson.token); // Save Data to Session Storage
+    			this.saveDataSession(usernameValue, responseJson.token, 'login_page'); // Save Data to Session Storage
     			
-	    		Actions.tabbar({usernameLogin: this.state.tokenSession});
-    			Actions.home_page({usernameLogin: this.state.tokenSession}); // go to Home Page
+	    		if (this.props.pageSession == 'forum_page') {
+	    			Actions.tabbar({usernameLogin: this.state.tokenSession});
+		    		Actions.forum({usernameLogin: this.state.tokenSession});
+	    			Actions.forum_page({usernameLogin: this.state.tokenSession}); // go to Forum Page
+	    		} else if (this.props.pageSession == 'product_page') {
+	    			Actions.tabbar({usernameLogin: this.state.tokenSession});
+		    		Actions.product({usernameLogin: this.state.tokenSession});
+	    			Actions.product_page({usernameLogin: this.state.tokenSession}); // go to Product Page
+	    		} else if (this.props.pageSession == 'profile_page') {
+	    			Actions.tabbar({usernameLogin: this.state.tokenSession});
+		    		Actions.profile({usernameLogin: this.state.tokenSession});
+	    			Actions.profile_page({usernameLogin: this.state.tokenSession}); // go to Profile Page
+	    		} else {
+	    			Actions.tabbar({usernameLogin: this.state.tokenSession});
+		    		Actions.home({usernameLogin: this.state.tokenSession});
+	    			Actions.home_page({usernameLogin: this.state.tokenSession}); // go to Home Page
+	    		}
 
 	    		this.usernameTxt._root.clear();
 		    	this.state.usernameValue = ""

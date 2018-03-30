@@ -54,15 +54,18 @@ export default class EditProfilePage extends Component {
 			appState: AppState.currentState,
 			usernameLogin: "",
 			usernameValue: "",
-			passwordValue: "",
 			emailValue: "",
 			nameValue: "",
 			addressValue: "",
+			deliv_addrValue: "",
+			account_noValue: "",
+			bank_nameValue: "",
 			errorMessage: "",
 			editProfileMessage: "",
 			profilePictureSource: '',
 			usernameSession: '',
-			tokenSession: ''
+			tokenSession: '',
+			pageSession: ''
 		}
 
 		// AsyncStorage - Save Data to Session Storage
@@ -71,7 +74,9 @@ export default class EditProfilePage extends Component {
               	let resultParsed = JSON.parse(result)
               	this.setState({
                 	usernameSession: resultParsed.usernameSession,
-                  	tokenSession: resultParsed.tokenSession
+                  	tokenSession: resultParsed.tokenSession,
+                  	pageSession: resultParsed.pageSession,
+                  	usernameValue: resultParsed.usernameSession
               	});
           	}
 	    });
@@ -94,14 +99,30 @@ export default class EditProfilePage extends Component {
 	// Load Data after Rendering
 	componentDidMount() {
 		this.getDisplayProfile(); // Get Display Profile
+
+		// Modify Left and Right Button
+        Actions.refresh({
+        	//title: this.props.product_name,
+        	renderBackButton: this.renderLeftButton,
+        	//renderRightButton: this.renderRightButton
+        });
+	}
+
+	// Render Left Button
+	renderLeftButton = () => {
+	    return (
+	    	<Icon name="arrow-back" onPress={() => {this.backButton()}} style={{color: '#fff'}} />
+	    )
+	}
+
+	// Back Button
+	backButton() {
+		Actions.profile_page({type:ActionConst.RESET});
 	}
 
 	// Edit Profile Action
-	editProfileAction(usernameValue, passwordValue, emailValue, nameValue, addressValue) {
-    	if (passwordValue == "") {
-    		this.passwordTxt._root.focus();
-    		this.setState({errorMessage: "Your password is empty"})
-    	} else if (emailValue == "") {
+	editProfileAction(usernameValue, emailValue, nameValue, addressValue, deliv_addrValue, account_noValue, bank_nameValue) {
+    	if (emailValue == "") {
     		this.emailTxt._root.focus();
     		this.setState({errorMessage: "Your email is empty"})
     	} else if (nameValue == "") {
@@ -110,28 +131,38 @@ export default class EditProfilePage extends Component {
     	} else if (addressValue == "") {
     		this.addressTxt._root.focus();
     		this.setState({errorMessage: "Your address is empty"})
+    	} else if (deliv_addrValue == "") {
+    		this.deliv_addrTxt._root.focus();
+    		this.setState({errorMessage: "Your delivery address is empty"})
+    	} else if (account_noValue == "") {
+    		this.account_noTxt._root.focus();
+    		this.setState({errorMessage: "Your account no is empty"})
+    	} else if (bank_nameValue == "") {
+    		this.bank_nameTxt._root.focus();
+    		this.setState({errorMessage: "Your bank name is empty"})
     	} else {
-    		this.getEditProfileResponse(usernameValue, passwordValue, emailValue, nameValue, addressValue); // Get Register Response
+    		this.getEditProfileResponse(usernameValue, emailValue, nameValue, addressValue, deliv_addrValue, account_noValue, bank_nameValue); // Get Register Response
     	}
     }
 
     // Get Edit Profile Response
-    getEditProfileResponse(usernameValue, passwordValue, emailValue, nameValue, addressValue) {
+    getEditProfileResponse(usernameValue, emailValue, nameValue, addressValue, deliv_addrValue, account_noValue, bank_nameValue) {
     	// AsyncStorage - Save Data to Session Storage
 		AsyncStorage.getItem('usernameTokenSession', (error, result) => {
 		    if (result) {
 		        let resultParsed = JSON.parse(result);
-		        let tokenSession = resultParsed.tokenSession;
+		        let usernameSession = resultParsed.usernameSession;
+              	let tokenSession = resultParsed.tokenSession;
+              	let pageSession = resultParsed.pageSession;
 		        
 		        var data = new FormData();
 				data.append('user_id', this.state.usernameSession);
-				data.append('password', passwordValue);
 				data.append('email', emailValue);
 				data.append('name', nameValue);
 				data.append('address', addressValue);
-				data.append('deliv_addr', '');
-				data.append('account_no', '');
-				data.append('bank_account', '');
+				data.append('deliv_addr', deliv_addrValue);
+				data.append('account_no', account_noValue);
+				data.append('bank_name', bank_nameValue);
 
 				if (this.state.profilePictureSource != '') {
 					data.append('prof_pic', {
@@ -165,11 +196,8 @@ export default class EditProfilePage extends Component {
 		    			//Actions.home({usernameLogin: usernameValue});
 			    		//Actions.login_page({type:ActionConst.RESET}); // go to Login Page
 
-			    		this.usernameTxt._root.clear();
+			    		/*this.usernameTxt._root.clear();
 				    	this.state.usernameValue = ""
-
-				    	this.passwordTxt._root.clear();
-				    	this.state.passwordValue = ""
 
 				    	this.emailTxt._root.clear();
 				    	this.state.emailValue = ""
@@ -178,9 +206,12 @@ export default class EditProfilePage extends Component {
 				    	this.state.nameValue = ""
 
 				    	this.addressTxt._root.clear();
-				    	this.state.addressValue = ""
+				    	this.state.addressValue = ""*/
 
-				    	this.setState({errorMessage: responseJson.message})
+				    	this.setState({
+				    		errorMessage: responseJson.message,
+				    		//profilePictureSource: ''
+				    	})
 		    		} else {
 		    			this.usernameTxt._root.focus();
 		    			this.setState({errorMessage: responseJson.message})
@@ -249,7 +280,8 @@ export default class EditProfilePage extends Component {
             if (result) {
                 let resultParsed = JSON.parse(result);
                 let usernameSession = resultParsed.usernameSession;
-                let tokenSession = resultParsed.tokenSession;
+              	let tokenSession = resultParsed.tokenSession;
+              	let pageSession = resultParsed.pageSession;
                 
                 return fetch(ipPortAddress() + '/api/display_profile', {
 				  method: 'POST',
@@ -264,7 +296,15 @@ export default class EditProfilePage extends Component {
 				})
 				.then((response) => response.json())
 		    	.then((responseJson) => {
-		    		this.setState({profileContentData: responseJson}); // Get the data from API
+		    		this.setState({
+		    			profileContentData: responseJson,
+		    			emailValue: responseJson.email,
+		    			nameValue: responseJson.name,
+		    			addressValue: responseJson.address,
+		    			deliv_addrValue: responseJson.delivery_addr,
+		    			account_noValue: responseJson.account_no,
+		    			bank_nameValue: responseJson.bank_name
+		    		}); // Get the data from API
 		    	})
 		    	.catch((error) => {
 		    		//console.error(error);
@@ -280,14 +320,6 @@ export default class EditProfilePage extends Component {
 	    if(e.nativeEvent.key == "Enter"){
 	        this.searchAction(this.state.usernameValue);
 	        this.usernameTxt._root.clear();
-	    }
-	}
-
-	// Read Enter Key Password
-	handleKeyDownPassword(e) {
-	    if(e.nativeEvent.key == "Enter"){
-	        this.searchAction(this.state.passwordValue);
-	        this.passwordTxt._root.clear();
 	    }
 	}
 
@@ -315,6 +347,30 @@ export default class EditProfilePage extends Component {
 	    }
 	}
 
+	// Read Enter Key Delivery Address
+	handleKeyDownDelivAddr(e) {
+	    if(e.nativeEvent.key == "Enter"){
+	        this.searchAction(this.state.deliv_addrValue);
+	        this.deliv_addrTxt._root.clear();
+	    }
+	}
+
+	// Read Enter Key Account No
+	handleKeyDownAccountNo(e) {
+	    if(e.nativeEvent.key == "Enter"){
+	        this.searchAction(this.state.account_noValue);
+	        this.account_noTxt._root.clear();
+	    }
+	}
+
+	// Read Enter Key Bank Name
+	handleKeyDownBankName(e) {
+	    if(e.nativeEvent.key == "Enter"){
+	        this.searchAction(this.state.bank_nameValue);
+	        this.bank_nameTxt._root.clear();
+	    }
+	}
+
 	// Keyboard Spacer
 	myKeyboardSpacer() {
 		if (Platform.OS === 'ios') {
@@ -326,6 +382,8 @@ export default class EditProfilePage extends Component {
 
 	// Get the data
 	render() {
+
+		var profile_picture = this.state.profileContentData.picture ? ipPortAddress() + this.state.profileContentData.picture + '?token=' + this.state.tokenSession : 'https://www.sparklabs.com/forum/styles/comboot/theme/images/default_avatar.jpg';
 
 	    return (
 
@@ -341,11 +399,11 @@ export default class EditProfilePage extends Component {
 				        		
 		        				<Form>
 						            <TouchableOpacity onPress={() => {this.uploadPhotoButton()}} style={{alignItems: 'center'}}>
-					            		<Image source = {{uri: this.state.profilePictureSource ? this.state.profilePictureSource.uri : 'https://www.sparklabs.com/forum/styles/comboot/theme/images/default_avatar.jpg'}} style={{width: 150, height: 150}} />
+					            		<Image source = {{uri: this.state.profilePictureSource ? this.state.profilePictureSource.uri : profile_picture}} style={{width: 150, height: 150}} />
 					            	</TouchableOpacity>
 
-						            <Item floatingLabel>
-						              <Label>Username: {this.state.usernameSession}</Label>
+						            <Item stackedLabel>
+						              <Label>Username</Label>
 						              <Input
 						              	onChangeText={(text) => this.setState({usernameValue: text})}
 						            	value={this.state.usernameValue}
@@ -359,34 +417,14 @@ export default class EditProfilePage extends Component {
 						            	selectionColor={'#233F4A'}
 						            	placeholderTextColor={'#233F4A'}
 						            	underlineColorAndroid={'transparent'}
-						            	/*ref="usernameTxt"*/
-						            	getRef={(input) => { this.usernameTxt = input; }}
+						            	ref={(input) => { this.usernameTxt = input; }}
+						            	/*getRef={(input) => { this.usernameTxt = input; }}*/ // only work in floatingLabel
 						            	onKeyPress={this.handleKeyDownUsername.bind(this)}
 						              />
 						            </Item>
 
-						            <Item floatingLabel last>
-						              <Label>Password: **********</Label>
-						              <Input
-						              	onChangeText={(text) => this.setState({passwordValue: text})}
-				                    	value={this.state.passwordValue}
-				                    	keyboardType={'twitter'}
-				                    	secureTextEntry={true}
-				                    	maxLength={20}
-				                    	returnKeyType={'go'}
-				                    	/*placeholder={'Password'}*/
-				                    	enablesReturnKeyAutomatically={true}
-				                    	selectionColor={'#233F4A'}
-				                    	placeholderTextColor={'#233F4A'}
-				                    	underlineColorAndroid={'transparent'}
-				                    	/*ref="passwordTxt"*/
-				                    	getRef={(input) => { this.passwordTxt = input; }}
-				                    	onKeyPress={this.handleKeyDownPassword.bind(this)}
-						              />
-						            </Item>
-
-						            <Item floatingLabel last>
-						              <Label>Email: {this.state.profileContentData.email}</Label>
+						            <Item stackedLabel last>
+						              <Label>Email</Label>
 						              <Input
 						              	onChangeText={(text) => this.setState({emailValue: text})}
 				                    	value={this.state.emailValue}
@@ -399,14 +437,14 @@ export default class EditProfilePage extends Component {
 				                    	selectionColor={'#233F4A'}
 				                    	placeholderTextColor={'#233F4A'}
 				                    	underlineColorAndroid={'transparent'}
-				                    	/*ref="emailTxt"*/
-				                    	getRef={(input) => { this.emailTxt = input; }}
+				                    	ref={(input) => { this.emailTxt = input; }}
+				                    	/*getRef={(input) => { this.emailTxt = input; }}*/
 				                    	onKeyPress={this.handleKeyDownEmail.bind(this)}
 						              />
 						            </Item>
 
-						            <Item floatingLabel last>
-						              <Label>Name: {this.state.profileContentData.name}</Label>
+						            <Item stackedLabel last>
+						              <Label>Name</Label>
 						              <Input
 						              	onChangeText={(text) => this.setState({nameValue: text})}
 				                    	value={this.state.nameValue}
@@ -419,14 +457,14 @@ export default class EditProfilePage extends Component {
 				                    	selectionColor={'#233F4A'}
 				                    	placeholderTextColor={'#233F4A'}
 				                    	underlineColorAndroid={'transparent'}
-				                    	/*ref="nameTxt"*/
-				                    	getRef={(input) => { this.nameTxt = input; }}
+				                    	ref={(input) => { this.nameTxt = input; }}
+				                    	/*getRef={(input) => { this.nameTxt = input; }}*/
 				                    	onKeyPress={this.handleKeyDownName.bind(this)}
 						              />
 						            </Item>
 
-						            <Item floatingLabel last>
-						              <Label>Address: {this.state.profileContentData.address}</Label>
+						            <Item stackedLabel last>
+						              <Label>Address</Label>
 						              <Input
 						              	onChangeText={(text) => this.setState({addressValue: text})}
 				                    	value={this.state.addressValue}
@@ -439,9 +477,69 @@ export default class EditProfilePage extends Component {
 				                    	selectionColor={'#233F4A'}
 				                    	placeholderTextColor={'#233F4A'}
 				                    	underlineColorAndroid={'transparent'}
-				                    	/*ref="addressTxt"*/
-				                    	getRef={(input) => { this.addressTxt = input; }}
+				                    	ref={(input) => { this.addressTxt = input; }}
+				                    	/*getRef={(input) => { this.addressTxt = input; }}*/
 				                    	onKeyPress={this.handleKeyDownAddress.bind(this)}
+						              />
+						            </Item>
+
+						            <Item stackedLabel last>
+						              <Label>Delivery Address</Label>
+						              <Input
+						              	onChangeText={(text) => this.setState({deliv_addrValue: text})}
+				                    	value={this.state.deliv_addrValue}
+				                    	keyboardType={'twitter'}
+				                    	secureTextEntry={false}
+				                    	maxLength={50}
+				                    	returnKeyType={'next'}
+				                    	/*placeholder={'Delivery Address'}*/
+				                    	enablesReturnKeyAutomatically={true}
+				                    	selectionColor={'#233F4A'}
+				                    	placeholderTextColor={'#233F4A'}
+				                    	underlineColorAndroid={'transparent'}
+				                    	ref={(input) => { this.deliv_addrTxt = input; }}
+				                    	/*getRef={(input) => { this.deliv_addrTxt = input; }}*/
+				                    	onKeyPress={this.handleKeyDownDelivAddr.bind(this)}
+						              />
+						            </Item>
+
+						            <Item stackedLabel last>
+						              <Label>Account No</Label>
+						              <Input
+						              	onChangeText={(text) => this.setState({account_noValue: text})}
+				                    	value={this.state.account_noValue}
+				                    	keyboardType={'twitter'}
+				                    	secureTextEntry={false}
+				                    	maxLength={50}
+				                    	returnKeyType={'next'}
+				                    	/*placeholder={'Account No'}*/
+				                    	enablesReturnKeyAutomatically={true}
+				                    	selectionColor={'#233F4A'}
+				                    	placeholderTextColor={'#233F4A'}
+				                    	underlineColorAndroid={'transparent'}
+				                    	ref={(input) => { this.account_noTxt = input; }}
+				                    	/*getRef={(input) => { this.account_noTxt = input; }}*/
+				                    	onKeyPress={this.handleKeyDownAccountNo.bind(this)}
+						              />
+						            </Item>
+
+						            <Item stackedLabel last>
+						              <Label>Bank Name</Label>
+						              <Input
+						              	onChangeText={(text) => this.setState({bank_nameValue: text})}
+				                    	value={this.state.bank_nameValue}
+				                    	keyboardType={'twitter'}
+				                    	secureTextEntry={false}
+				                    	maxLength={50}
+				                    	returnKeyType={'next'}
+				                    	/*placeholder={'Bank Name'}*/
+				                    	enablesReturnKeyAutomatically={true}
+				                    	selectionColor={'#233F4A'}
+				                    	placeholderTextColor={'#233F4A'}
+				                    	underlineColorAndroid={'transparent'}
+				                    	ref={(input) => { this.bank_nameTxt = input; }}
+				                    	/*getRef={(input) => { this.bank_nameTxt = input; }}*/
+				                    	onKeyPress={this.handleKeyDownBankName.bind(this)}
 						              />
 						            </Item>
 						        </Form>
@@ -460,7 +558,7 @@ export default class EditProfilePage extends Component {
 
 		        		<Footer style={{backgroundColor: '#eee'}}>
 		    				<FooterTab>
-			    				<Button onPress={() => {this.editProfileAction(this.state.usernameValue, this.state.passwordValue, this.state.emailValue, this.state.nameValue, this.state.addressValue)}}>
+			    				<Button onPress={() => {this.editProfileAction(this.state.usernameValue, this.state.emailValue, this.state.nameValue, this.state.addressValue, this.state.deliv_addrValue, this.state.account_noValue, this.state.bank_nameValue)}}>
 						            <Text>Edit Profile</Text>
 						        </Button>
 			    			</FooterTab>

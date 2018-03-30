@@ -57,7 +57,8 @@ export default class ProfilePage extends Component {
 			screenHeight: 0,
 			avatarSource: '',
 			usernameSession: '',
-			tokenSession: ''
+			tokenSession: '',
+			pageSession: ''
 		}
 
 		// AsyncStorage - Save Data to Session Storage
@@ -66,7 +67,8 @@ export default class ProfilePage extends Component {
               	let resultParsed = JSON.parse(result)
               	this.setState({
                 	usernameSession: resultParsed.usernameSession,
-                  	tokenSession: resultParsed.tokenSession
+                  	tokenSession: resultParsed.tokenSession,
+                  	pageSession: resultParsed.pageSession
               	});
           	}
 	    });
@@ -96,26 +98,44 @@ export default class ProfilePage extends Component {
 		});
 
 		//alert(fixedHeight);
-		this.getDisplayProfile();
+
+		// AsyncStorage - Save Data to Session Storage
+		AsyncStorage.getItem('usernameTokenSession', (error, result) => {
+          	if (result) {
+              	let resultParsed = JSON.parse(result);
+              	let usernameSession = resultParsed.usernameSession;
+              	let tokenSession = resultParsed.tokenSession;
+              	let pageSession = resultParsed.pageSession;
+
+              	if (tokenSession == 'tokenLogout') {
+		      		//alert("Please Login");
+
+    				Actions.login_page({pageSession: 'profile_page', type:ActionConst.RESET}); // go to Login Page
+		      	} else {
+		      		this.getDisplayProfile();
+		      	}
+            }
+        })
 	}
 
 	// Save Data to Session Storage
-	saveDataSession(usernameValue, tokenValue) {
+	saveDataSession(usernameValue, tokenValue, pageValue) {
 	    let usernameSession = usernameValue;
 	    let tokenSession = tokenValue;
+	    let pageSession = pageValue;
 	    let dataSession = {
 	        usernameSession: usernameSession,
-	        tokenSession: tokenSession
+	        tokenSession: tokenSession,
+	        pageSession: pageSession
 	    }
 
 	    AsyncStorage.setItem('usernameTokenSession', JSON.stringify(dataSession));
 
 	    this.setState({
 	        usernameSession: usernameSession,
-	        tokenSession: tokenSession
+	        tokenSession: tokenSession,
+	        pageSession: pageSession
 	    });
-
-	    //alert('Data tersimpan');
 	}
 
 	// Display Transaction Action
@@ -123,16 +143,26 @@ export default class ProfilePage extends Component {
     	Actions.transaction_page({}); // go to Display Transaction Page
     }
 
+    // Change Password Action
+	changePasswordAction() {
+    	Actions.change_password_page({}); // go to Change Password Page
+    }
+
 	// Edit Profile Action
 	editProfileAction() {
     	Actions.edit_profile_page({}); // go to Edit Profile Page
     }
 
+    // Contact Us Action
+	contactUsAction() {
+    	Actions.contact_us_page({}); // go to Contact Us Page
+    }
+
 	// Logout Action
 	logoutAction() {
-    	this.saveDataSession("tokenLogout", "usernameLogout");
+    	this.saveDataSession("usernameLogout", "tokenLogout", "profile_page");
 
-    	Actions.login_page({type:ActionConst.RESET}); // go to Login Page
+    	Actions.login_page({pageSession: 'logout_profile_page', type:ActionConst.RESET}); // go to Login Page
     }
 
     // Get Display Profile
@@ -142,7 +172,8 @@ export default class ProfilePage extends Component {
             if (result) {
                 let resultParsed = JSON.parse(result);
                 let usernameSession = resultParsed.usernameSession;
-                let tokenSession = resultParsed.tokenSession;
+              	let tokenSession = resultParsed.tokenSession;
+              	let pageSession = resultParsed.pageSession;
                 
                 return fetch(ipPortAddress() + '/api/display_profile', {
 				  method: 'POST',
@@ -175,7 +206,8 @@ export default class ProfilePage extends Component {
             if (result) {
                 let resultParsed = JSON.parse(result);
                 let usernameSession = resultParsed.usernameSession;
-                let tokenSession = resultParsed.tokenSession;
+              	let tokenSession = resultParsed.tokenSession;
+              	let pageSession = resultParsed.pageSession;
                 
                 return fetch(ipPortAddress() + '/api/images/user/riosimatupang.jpg', {
 				  method: 'GET',
@@ -199,6 +231,8 @@ export default class ProfilePage extends Component {
 	// Get the data
 	render() {
 
+		var profile_picture = this.state.profileContentData.picture ? ipPortAddress() + this.state.profileContentData.picture + '?token=' + this.state.tokenSession : 'https://www.sparklabs.com/forum/styles/comboot/theme/images/default_avatar.jpg';
+
 		return (
 
 			<Container>
@@ -211,19 +245,18 @@ export default class ProfilePage extends Component {
 
 		            		<Grid>
 					            <Col style={{ backgroundColor: '#233F4A', height: 200, justifyContent: 'center', alignItems: 'center' }}>
-					            	<Image source = {{uri: this.state.profileContentData.picture != '' ? ipPortAddress() + this.state.profileContentData.picture + '?token=' + this.state.tokenSession : 'https://www.sparklabs.com/forum/styles/comboot/theme/images/default_avatar.jpg'}} style={{width: 150, height: 150}} />
+					            	<Image source = {{uri: profile_picture}} style={{width: 150, height: 150}} />
 					            	<Text style={{marginTop: 10, color: '#fff'}}>{this.state.profileContentData.name}</Text>
 					            </Col>
 					        </Grid>
 
 					        <List>
-					            <ListItem style={{justifyContent: 'space-between'}}>
-					              <Text>Phone Number</Text>
-					              <Text>08123456789</Text>
-					            </ListItem>
-
 					            <ListItem onPress={() => {this.displayTransactionAction()}}>
 					              <Text>List Transactions</Text>
+					            </ListItem>
+
+					            <ListItem onPress={() => {this.changePasswordAction()}}>
+					              <Text>Change Password</Text>
 					            </ListItem>
 
 					            <ListItem onPress={() => {this.editProfileAction()}}>
@@ -236,6 +269,10 @@ export default class ProfilePage extends Component {
 
 					            <ListItem>
 					              <Text>Privacy Policy</Text>
+					            </ListItem>
+
+					            <ListItem onPress={() => {this.contactUsAction()}}>
+					              <Text>Contact Us</Text>
 					            </ListItem>
 
 					            <ListItem onPress={() => {this.logoutAction()}}>

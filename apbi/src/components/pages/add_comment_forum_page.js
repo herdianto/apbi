@@ -66,7 +66,8 @@ export default class AddCommentForumPage extends Component {
 			pageID: 1,
 			maxPageID: 0,
 			usernameSession: '',
-			tokenSession: ''
+			tokenSession: '',
+			pageSession: ''
 		}
 
 		// AsyncStorage - Save Data to Session Storage
@@ -75,7 +76,8 @@ export default class AddCommentForumPage extends Component {
               	let resultParsed = JSON.parse(result)
               	this.setState({
                 	usernameSession: resultParsed.usernameSession,
-                  	tokenSession: resultParsed.tokenSession
+                  	tokenSession: resultParsed.tokenSession,
+                  	pageSession: resultParsed.pageSession
               	});
           	}
 	    });
@@ -148,7 +150,9 @@ export default class AddCommentForumPage extends Component {
 		AsyncStorage.getItem('usernameTokenSession', (error, result) => {
           	if (result) {
               	let resultParsed = JSON.parse(result);
+              	let usernameSession = resultParsed.usernameSession;
               	let tokenSession = resultParsed.tokenSession;
+              	let pageSession = resultParsed.pageSession;
               	
               	return fetch(ipPortAddress() + '/api/forum/get_comment?thread_id=' + this.props.forumID + '&page=' + pageID, {
 		        	method: 'GET',
@@ -201,7 +205,9 @@ export default class AddCommentForumPage extends Component {
 		AsyncStorage.getItem('usernameTokenSession', (error, result) => {
           	if (result) {
               	let resultParsed = JSON.parse(result);
+              	let usernameSession = resultParsed.usernameSession;
               	let tokenSession = resultParsed.tokenSession;
+              	let pageSession = resultParsed.pageSession;
               	
               	return fetch(ipPortAddress() + '/api/forum/delete_comment', {
 				  method: 'POST',
@@ -250,7 +256,9 @@ export default class AddCommentForumPage extends Component {
 			AsyncStorage.getItem('usernameTokenSession', (error, result) => {
 	          	if (result) {
 	              	let resultParsed = JSON.parse(result);
+	              	let usernameSession = resultParsed.usernameSession;
 	              	let tokenSession = resultParsed.tokenSession;
+	              	let pageSession = resultParsed.pageSession;
 	              	
 	              	return fetch(ipPortAddress() + '/api/forum/add_comment', {
 					  method: 'POST',
@@ -323,7 +331,9 @@ export default class AddCommentForumPage extends Component {
 			AsyncStorage.getItem('usernameTokenSession', (error, result) => {
 	          	if (result) {
 	              	let resultParsed = JSON.parse(result);
+	              	let usernameSession = resultParsed.usernameSession;
 	              	let tokenSession = resultParsed.tokenSession;
+	              	let pageSession = resultParsed.pageSession;
 	              	
 	              	return fetch(ipPortAddress() + '/api/forum/get_comment?thread_id=' + this.props.forumID + '&page=' + pageID, {
 			        	method: 'GET',
@@ -366,13 +376,15 @@ export default class AddCommentForumPage extends Component {
     	var prevPageID = parseInt(pageID) - 1;
         
         if (prevPageID == 0) {
-			alert("Page No "+prevPageID+" not found");
+			alert("This is the first page");
 		} else {
 			// AsyncStorage - Save Data to Session Storage
 			AsyncStorage.getItem('usernameTokenSession', (error, result) => {
 	          	if (result) {
 	              	let resultParsed = JSON.parse(result);
+	              	let usernameSession = resultParsed.usernameSession;
 	              	let tokenSession = resultParsed.tokenSession;
+	              	let pageSession = resultParsed.pageSession;
 	              	
 	              	return fetch(ipPortAddress() + '/api/forum/get_comment?thread_id=' + this.props.forumID + '&page=' + prevPageID, {
 			        	method: 'GET',
@@ -411,7 +423,9 @@ export default class AddCommentForumPage extends Component {
 		AsyncStorage.getItem('usernameTokenSession', (error, result) => {
           	if (result) {
               	let resultParsed = JSON.parse(result);
+              	let usernameSession = resultParsed.usernameSession;
               	let tokenSession = resultParsed.tokenSession;
+              	let pageSession = resultParsed.pageSession;
               	
               	return fetch(ipPortAddress() + '/api/forum/get_comment?thread_id=' + this.props.forumID + '&page=' + nextPageID, {
 		        	method: 'GET',
@@ -426,7 +440,7 @@ export default class AddCommentForumPage extends Component {
 		    		//alert(JSON.stringify(responseJson));
 
 		    		if (responseJson.length == 0) {
-		    			alert("Page No "+nextPageID+" not found");
+		    			alert("This is the last page");
 
 		    			this.setState({
 			    			maxPageID: pageID
@@ -490,9 +504,10 @@ export default class AddCommentForumPage extends Component {
     	var forum_posted_by = this.props.forumPostedBy;
     	var forum_last_update_date = this.props.forumLastUpdateDate;
     	var forum_last_update_by = this.props.forumLastUpdateBy;
+    	var forum_profile_picture = this.props.forum_profile_picture;
+	    var forum_profile_picture_full = forum_profile_picture != null ? ipPortAddress() + forum_profile_picture + '?token=' + this.state.tokenSession : 'https://www.sparklabs.com/forum/styles/comboot/theme/images/default_avatar.jpg';
     	var forum_picture = this.props.forum_picture;
     	var forum_picture_full = ipPortAddress() + forum_picture + '?token=' + this.state.tokenSession;
-    	var profile_picture = this.props.profilePicture;
     	var total_comment = this.state.newTotalComment;
 
     	// Display Forum Image
@@ -500,7 +515,7 @@ export default class AddCommentForumPage extends Component {
     		var displayForumImage = () => {
     			return (
     				<CardItem>
-		        		<FitImage source = {{uri: forum_picture_full}} style={{width: 150, height: 150}} />
+		        		<FitImage source = {{uri: forum_picture_full}} style={{}} />
 		        	</CardItem>
     			)
     		}
@@ -563,11 +578,15 @@ export default class AddCommentForumPage extends Component {
 			        		<Card key={forum_id}>
 					        	<CardItem>
 					        		<Left>
-					        			<Thumbnail source={{uri: profile_picture}} />
+					        			<Thumbnail source={{uri: forum_profile_picture_full}} />
 					        			<Body>
-					        				<Text onPress={() => Linking.openURL(link_post)}>{forum_title}</Text>
+					        				<Text>{forum_posted_by}</Text>
 					        			</Body>
 					        		</Left>
+					        	</CardItem>
+
+					        	<CardItem>
+					        		<Text style={{fontWeight: 'bold', fontSize: 20}}>{forum_title}</Text>
 					        	</CardItem>
 
 					        	{displayForumImage()}

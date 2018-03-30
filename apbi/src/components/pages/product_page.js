@@ -61,7 +61,8 @@ export default class ProductPage extends Component {
 			pageID: 1,
 			maxPageID: 0,
 			usernameSession: '',
-			tokenSession: ''
+			tokenSession: '',
+			pageSession: ''
 		}
 
 		// AsyncStorage - Save Data to Session Storage
@@ -70,7 +71,8 @@ export default class ProductPage extends Component {
               	let resultParsed = JSON.parse(result)
               	this.setState({
                 	usernameSession: resultParsed.usernameSession,
-                  	tokenSession: resultParsed.tokenSession
+                  	tokenSession: resultParsed.tokenSession,
+                  	pageSession: resultParsed.pageSession
               	});
           	}
 	    });
@@ -105,7 +107,23 @@ export default class ProductPage extends Component {
 
 		//alert(JSON.stringify(this.state.cartList));	
 
-		this.getProductContent(this.state.pageID); // Get Product Content	
+		// AsyncStorage - Save Data to Session Storage
+		AsyncStorage.getItem('usernameTokenSession', (error, result) => {
+          	if (result) {
+              	let resultParsed = JSON.parse(result);
+              	let usernameSession = resultParsed.usernameSession;
+              	let tokenSession = resultParsed.tokenSession;
+              	let pageSession = resultParsed.pageSession;
+
+              	if (tokenSession == 'tokenLogout') {
+		      		//alert("Please Login");
+
+    				Actions.login_page({pageSession: 'product_page', type:ActionConst.RESET}); // go to Login Page
+		      	} else {
+		      		this.getProductContent(this.state.pageID); // Get Product Content
+		      	}
+            }
+        })
 	}
 
 	// Get Product Content
@@ -114,7 +132,9 @@ export default class ProductPage extends Component {
 	    AsyncStorage.getItem('usernameTokenSession', (error, result) => {
             if (result) {
                 let resultParsed = JSON.parse(result);
-                let tokenSession = resultParsed.tokenSession;
+                let usernameSession = resultParsed.usernameSession;
+              	let tokenSession = resultParsed.tokenSession;
+              	let pageSession = resultParsed.pageSession;
                 
                 return fetch(ipPortAddress() + '/api/product/get_product_list/' + pageID, {
 		        	method: 'GET',
@@ -163,7 +183,9 @@ export default class ProductPage extends Component {
 		AsyncStorage.getItem('usernameTokenSession', (error, result) => {
 		    if (result) {
 		        let resultParsed = JSON.parse(result);
-		        let tokenSession = resultParsed.tokenSession;
+		        let usernameSession = resultParsed.usernameSession;
+              	let tokenSession = resultParsed.tokenSession;
+              	let pageSession = resultParsed.pageSession;
 		        
 		        return fetch(ipPortAddress() + '/api/product/search?keyword=' + searchProductValue, {
 		        	method: 'GET',
@@ -189,8 +211,8 @@ export default class ProductPage extends Component {
 	}
 
 	// Detail Product Action
-	detailProductAction(product_id) {
-    	Actions.product_detail_page({productID: product_id, cartList: this.state.cartList}); // go to Detail Product Page
+	detailProductAction(product_id, product_name) {
+    	Actions.product_detail_page({productID: product_id, product_name: product_name, cartList: this.state.cartList}); // go to Detail Product Page
     }
 
     // Search Page Product Action
@@ -203,7 +225,9 @@ export default class ProductPage extends Component {
 			AsyncStorage.getItem('usernameTokenSession', (error, result) => {
 			    if (result) {
 			        let resultParsed = JSON.parse(result);
-			        let tokenSession = resultParsed.tokenSession;
+			        let usernameSession = resultParsed.usernameSession;
+	              	let tokenSession = resultParsed.tokenSession;
+	              	let pageSession = resultParsed.pageSession;
 			        
 			        return fetch(ipPortAddress() + '/api/product/get_product_list/' + pageID, {
 			        	method: 'GET',
@@ -244,13 +268,15 @@ export default class ProductPage extends Component {
     	var prevPageID = parseInt(pageID) - 1;
         
         if (prevPageID == 0) {
-    			alert("Page No "+prevPageID+" not found");
+    			alert("This is the first page");
     	} else {
     		// AsyncStorage - Save Data to Session Storage
 			AsyncStorage.getItem('usernameTokenSession', (error, result) => {
 			    if (result) {
 			        let resultParsed = JSON.parse(result);
-			        let tokenSession = resultParsed.tokenSession;
+			        let usernameSession = resultParsed.usernameSession;
+	              	let tokenSession = resultParsed.tokenSession;
+	              	let pageSession = resultParsed.pageSession;
 			        
 			        return fetch(ipPortAddress() + '/api/product/get_product_list/' + prevPageID, {
 			        	method: 'GET',
@@ -287,7 +313,9 @@ export default class ProductPage extends Component {
 		AsyncStorage.getItem('usernameTokenSession', (error, result) => {
 		    if (result) {
 		        let resultParsed = JSON.parse(result);
-		        let tokenSession = resultParsed.tokenSession;
+		        let usernameSession = resultParsed.usernameSession;
+              	let tokenSession = resultParsed.tokenSession;
+              	let pageSession = resultParsed.pageSession;
 		        
 		        return fetch(ipPortAddress() + '/api/product/get_product_list/' + nextPageID, {
 		        	method: 'GET',
@@ -302,7 +330,7 @@ export default class ProductPage extends Component {
 		    		//alert(JSON.stringify(responseJson));
 
 		    		if (responseJson.length == 0) {
-		    			alert("Page No "+nextPageID+" not found");
+		    			alert("This is the last page");
 
 		    			this.setState({
 			    			maxPageID: pageID
@@ -377,7 +405,7 @@ export default class ProductPage extends Component {
 	        		<Text style={{marginTop: 120, marginLeft: -80, width: 80, fontSize: 10}}>{product_name}</Text>
 	        	</CardItem>*/
 
-	        	<TouchableOpacity onPress={() => {this.detailProductAction(product_id)}} key={product_id} style={{borderRadius: 2, borderWidth: 2, borderColor: '#eee', backgroundColor: '#fff', margin: 0.5, padding: 5, width: this.state.screenWidth}}>
+	        	<TouchableOpacity onPress={() => {this.detailProductAction(product_id, product_name)}} key={product_id} style={{borderRadius: 2, borderWidth: 2, borderColor: '#eee', backgroundColor: '#fff', margin: 0.5, padding: 5, width: this.state.screenWidth}}>
 					<Image source={{uri: ipPortAddress() + product_images + '?token=' + this.state.tokenSession}} style={{width: this.state.imageWidth, height: 90}} />
 					<Text>{product_name}</Text>
 				</TouchableOpacity>

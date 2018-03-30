@@ -41,9 +41,12 @@ import ProductPage from './src/components/pages/product_page';
 import ProductDetailPage from './src/components/pages/product_detail_page';
 import CartPage from './src/components/pages/cart_page';
 import ProfilePage from './src/components/pages/profile_page';
+import ChangePasswordPage from './src/components/pages/change_password_page';
 import EditProfilePage from './src/components/pages/edit_profile_page';
 import TransactionPage from './src/components/pages/transaction_page';
 import TransactionDetailPage from './src/components/pages/transaction_detail_page';
+import PaymentConfirmationPage from './src/components/pages/payment_confirmation_page';
+import ContactUsPage from './src/components/pages/contact_us_page';
 
 // Simple component to render something in place of icon
 /*const TabIcon = ({ selected, title }) => {
@@ -290,9 +293,42 @@ export default class apbi extends Component {
                     barButtonIconStyle={{tintColor: '#fff'}} />
 
                   <Scene
+                    key="payment_confirmation_page"
+                    component={PaymentConfirmationPage}
+                    title="Payment Confirmation Page"
+                    hideNavBar={false}
+                    navigationBarStyle={{backgroundColor: '#233F4A'}}
+                    titleStyle={{color: '#fff'}}
+                    leftButtonIconStyle={{tintColor: '#fff'}}
+                    barButtonTextStyle={{color: '#fff'}}
+                    barButtonIconStyle={{tintColor: '#fff'}} />
+
+                  <Scene
+                    key="change_password_page"
+                    component={ChangePasswordPage}
+                    title="Change Password Page"
+                    hideNavBar={false}
+                    navigationBarStyle={{backgroundColor: '#233F4A'}}
+                    titleStyle={{color: '#fff'}}
+                    leftButtonIconStyle={{tintColor: '#fff'}}
+                    barButtonTextStyle={{color: '#fff'}}
+                    barButtonIconStyle={{tintColor: '#fff'}} />
+
+                  <Scene
                     key="edit_profile_page"
                     component={EditProfilePage}
                     title="Edit Profile Page"
+                    hideNavBar={false}
+                    navigationBarStyle={{backgroundColor: '#233F4A'}}
+                    titleStyle={{color: '#fff'}}
+                    leftButtonIconStyle={{tintColor: '#fff'}}
+                    barButtonTextStyle={{color: '#fff'}}
+                    barButtonIconStyle={{tintColor: '#fff'}} />
+
+                  <Scene
+                    key="contact_us_page"
+                    component={ContactUsPage}
+                    title="Contact Us Page"
                     hideNavBar={false}
                     navigationBarStyle={{backgroundColor: '#233F4A'}}
                     titleStyle={{color: '#fff'}}

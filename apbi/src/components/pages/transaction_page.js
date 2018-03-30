@@ -56,7 +56,8 @@ export default class TransactionPage extends Component {
 			pageID: 1,
 			usernameLogin: "",
 			usernameSession: '',
-			tokenSession: ''
+			tokenSession: '',
+			pageSession: ''
 		}
 
 		// AsyncStorage - Save Data to Session Storage
@@ -65,7 +66,8 @@ export default class TransactionPage extends Component {
               	let resultParsed = JSON.parse(result)
               	this.setState({
                 	usernameSession: resultParsed.usernameSession,
-                  	tokenSession: resultParsed.tokenSession
+                  	tokenSession: resultParsed.tokenSession,
+                  	pageSession: resultParsed.pageSession
               	});
           	}
 	    });
@@ -95,13 +97,20 @@ export default class TransactionPage extends Component {
     	Actions.transaction_detail_page({transaction_id: transaction_id, transaction_product: transaction_product}); // go to Display Transaction Page
     }
 
+    // Payment Confirmation Action
+	paymentConfirmationAction(transaction_id) {
+    	Actions.payment_confirmation_page({transaction_id: transaction_id}); // go to Payment Confirmation Page
+    }
+
 	// Get Transaction
     getTransaction(pageID) {
     	// AsyncStorage - Save Data to Session Storage
 		AsyncStorage.getItem('usernameTokenSession', (error, result) => {
           	if (result) {
               	let resultParsed = JSON.parse(result);
+              	let usernameSession = resultParsed.usernameSession;
               	let tokenSession = resultParsed.tokenSession;
+              	let pageSession = resultParsed.pageSession;
               	
               	return fetch(ipPortAddress() + '/api/product/get_transaction/' + pageID, {
 		        	method: 'GET',
@@ -136,7 +145,9 @@ export default class TransactionPage extends Component {
 			AsyncStorage.getItem('usernameTokenSession', (error, result) => {
 	          	if (result) {
 	              	let resultParsed = JSON.parse(result);
+	              	let usernameSession = resultParsed.usernameSession;
 	              	let tokenSession = resultParsed.tokenSession;
+	              	let pageSession = resultParsed.pageSession;
 	              	
 	              	return fetch(ipPortAddress() + '/api/product/get_transaction/' + pageID, {
 			        	method: 'GET',
@@ -175,13 +186,15 @@ export default class TransactionPage extends Component {
     	var prevPageID = parseInt(pageID) - 1;
         
         if (prevPageID == 0) {
-			alert("Page No "+prevPageID+" not found");
+			alert("This is the first page");
 		} else {
 			// AsyncStorage - Save Data to Session Storage
 			AsyncStorage.getItem('usernameTokenSession', (error, result) => {
 	          	if (result) {
 	              	let resultParsed = JSON.parse(result);
+	              	let usernameSession = resultParsed.usernameSession;
 	              	let tokenSession = resultParsed.tokenSession;
+	              	let pageSession = resultParsed.pageSession;
 	              	
 	              	return fetch(ipPortAddress() + '/api/product/get_transaction/' + prevPageID, {
 			        	method: 'GET',
@@ -216,7 +229,9 @@ export default class TransactionPage extends Component {
 		AsyncStorage.getItem('usernameTokenSession', (error, result) => {
           	if (result) {
               	let resultParsed = JSON.parse(result);
+              	let usernameSession = resultParsed.usernameSession;
               	let tokenSession = resultParsed.tokenSession;
+              	let pageSession = resultParsed.pageSession;
               	
               	return fetch(ipPortAddress() + '/api/product/get_transaction/' + nextPageID, {
 		        	method: 'GET',
@@ -229,7 +244,7 @@ export default class TransactionPage extends Component {
 		    	.then((response) => response.json())
 		    	.then((responseJson) => {
 		    		if (responseJson.length == 0) {
-		    			alert("Page No "+nextPageID+" not found");
+		    			alert("This is the last page");
 
 		    			this.setState({
 			    			maxPageID: pageID
@@ -285,6 +300,27 @@ export default class TransactionPage extends Component {
 	    	for(var i = 0; i < transaction_product_total; i++) {
 				transaction_price += transaction_product[i].price * transaction_product[i].quantity;
 			}
+
+			// Payment Confirmation
+	    	if (transaction_status == "Order Created") {
+	    		var paymentConfirmationButton = () => {
+	    			return (
+	    				<Row>
+	            			<Col>
+					            	<Text>Payment Confirmation</Text>
+					        </Col>
+					        <Col style={{alignItems: 'flex-end'}}>
+					        	<Icon name='cloud-upload'
+			                    	style={{marginLeft: 10}}
+			                    	onPress={() => {this.paymentConfirmationAction(transaction_id)}}
+		  						/>
+					        </Col>
+					    </Row>
+	    			)
+	    		}
+	    	} else {
+	    		var paymentConfirmationButton = () => {}
+	    	}
 	    	
 			return (
 				<Grid key={index} style={{borderBottomWidth: 1, borderColor: '#eee', padding: 5}} onPress={() => {this.displayTransactionDetailAction(transaction_id, transaction_product)}}>
@@ -332,6 +368,8 @@ export default class TransactionPage extends Component {
 				            	<Text>{transaction_price}</Text>
 				        </Col>
 				    </Row>
+
+				    {paymentConfirmationButton()}
 		        </Grid>
 			)
 		});

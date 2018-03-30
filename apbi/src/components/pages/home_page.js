@@ -9,8 +9,8 @@
 
 // Import Libraries
 import React, { Component } from 'react';
-import { AppRegistry, Text, Image, Linking, Dimensions, ScrollView, AppState, Platform, AsyncStorage } from 'react-native';
-import { Content, Card, CardItem, Body, Left, Thumbnail, Button, Icon, Container } from 'native-base';
+import { AppRegistry, Text, Image, Linking, Dimensions, ScrollView, AppState, Platform, TextInput, AsyncStorage } from 'react-native';
+import { Content, Card, CardItem, Body, Left, Thumbnail, Button, Icon, Container, Item, Input, Header, Footer, FooterTab } from 'native-base';
 import HTMLView from 'react-native-htmlview';
 import TimeAgo from 'react-native-timeago';
 import FitImage from 'react-native-fit-image';
@@ -56,8 +56,14 @@ export default class HomePage extends Component {
 			appState: AppState.currentState,
 			usernameLogin: '',
 			currentCount: 3,
+			pageID: 1,
+			maxPageID: 0,
+			searchNewsValue: "",
+			searchPageNewsValue: '',
+			errorMessage: "",
 			usernameSession: '',
-			tokenSession: ''
+			tokenSession: '',
+			pageSession: ''
 		}
 
 		// AsyncStorage - Save Data to Session Storage
@@ -66,7 +72,8 @@ export default class HomePage extends Component {
               	let resultParsed = JSON.parse(result)
               	this.setState({
                 	usernameSession: resultParsed.usernameSession,
-                  	tokenSession: resultParsed.tokenSession
+                  	tokenSession: resultParsed.tokenSession,
+                  	pageSession: resultParsed.pageSession
               	});
           	}
 	    });
@@ -87,7 +94,7 @@ export default class HomePage extends Component {
 	}
 
 	componentDidMount() {
-		this.getNewsContent(); // Get News Content
+		this.getNewsContent(this.state.pageID); // Get News Content
 	}
 
 	// Unmount the variable
@@ -114,33 +121,9 @@ export default class HomePage extends Component {
 	    }
 	}
 
-	getData() {
-		return fetch('https://kidungjemaathkbp.tagshout.com/api/songs', {
-        	method: 'GET',
-        	headers: {
-            	'Accept': 'application/json',
-            	'Content-Type': 'application/json',
-          }
-      	})
-    	.then((response) => response.json())
-    	.then((responseJson) => {
-    		//alert(JSON.stringify(responseJson));
-
-    		this.setState({dataHome: responseJson.songs}); // Get the data from API
-    	})
-    	.catch((error) => {
-    		//console.error(error);
-    		
-    		alert(error);
-    	});
-
-    	//text
-    	//response.text()
-	}
-
 	// Get News Content
-    getNewsContent() {
-    	return fetch(ipPortAddress() + '/news/get_news', {
+    getNewsContent(pageID) {
+    	return fetch(ipPortAddress() + '/news/get_news?page=' + pageID, {
         	method: 'GET',
         	headers: {
             	'Accept': 'application/json',
@@ -149,13 +132,172 @@ export default class HomePage extends Component {
       	})
     	.then((response) => response.json())
     	.then((responseJson) => {
-    		this.setState({newsContentData: [responseJson]}); // Get the data from API
+    		this.setState({newsContentData: responseJson}); // Get the data from API
     	})
     	.catch((error) => {
     		//console.error(error);
     		
     		alert(error);
     	});
+	}
+
+	// Search News Action
+	searchNewsAction(searchNewsValue) {
+    	if (searchNewsValue == "") {
+    		alert("Your search news is empty");
+    		
+    		this.searchNewsTxt._root.focus();
+    		this.setState({errorMessage: "Your search news is empty"})
+    	} else {
+    		this.getSearchNewsResponse(searchNewsValue); // Get Search News Response
+
+    		this.searchNewsTxt._root.clear();
+		    this.state.searchNewsValue = ""
+    	}
+    }
+
+    // Get Search News Response
+    getSearchNewsResponse(searchNewsValue) {
+        return fetch(ipPortAddress() + '/news/search?keyword=' + searchNewsValue, {
+        	method: 'GET',
+        	headers: {
+            	'Accept': 'application/json',
+            	'Content-Type': 'application/json'
+          }
+      	})
+    	.then((response) => response.json())
+    	.then((responseJson) => {
+    		//alert(JSON.stringify(responseJson));
+
+    		this.setState({newsContentData: responseJson}); // Get the data from API
+    	})
+    	.catch((error) => {
+    		//console.error(error);
+    		
+    		alert(error);
+    	});
+	}
+
+	// Search Page News Action
+	searchPageNewsAction(pageID) {
+		if (pageID == "" || pageID == 0) {
+			this.refs.searchPageNewsTxt.focus();
+			alert("Search can not be empty");
+		} else {
+		  	return fetch(ipPortAddress() + '/news/get_news?page=' + pageID, {
+	        	method: 'GET',
+	        	headers: {
+	            	'Accept': 'application/json',
+	            	'Content-Type': 'application/json'
+	          }
+	      	})
+	    	.then((response) => response.json())
+	    	.then((responseJson) => {
+	    		if (responseJson.length == 0) {
+	    			alert("Page No "+pageID+" not found");
+	    		} else {
+	    			this.setState({
+		    			newsContentData: responseJson,
+		    			pageID: pageID
+		    		}); // Get the data from API
+	    		}
+
+	    		this.refs.searchPageNewsTxt.clear();
+    			this.state.searchPageNewsValue = ""
+	    	})
+	    	.catch((error) => {
+	    		//console.error(error);
+	    		
+	    		alert(error);
+	    	});
+		}
+    }
+
+    // Prev Action
+    prevAction(pageID) {
+    	var prevPageID = parseInt(pageID) - 1;
+        
+        if (prevPageID == 0) {
+			alert("This is the first page");
+		} else {
+			return fetch(ipPortAddress() + '/news/get_news?page=' + prevPageID, {
+	        	method: 'GET',
+	        	headers: {
+	            	'Accept': 'application/json',
+	            	'Content-Type': 'application/json'
+	          }
+	      	})
+	    	.then((response) => response.json())
+	    	.then((responseJson) => {
+	    		this.setState({
+	    			newsContentData: responseJson,
+	    			pageID: prevPageID
+	    		}); // Get the data from API
+	    	})
+	    	.catch((error) => {
+	    		//console.error(error);
+	    		
+	    		alert(error);
+	    	});
+		}
+    }
+
+	// Next Action
+	nextAction(pageID) {
+		var nextPageID = parseInt(pageID) + 1;
+
+      	return fetch(ipPortAddress() + '/news/get_news?page=' + nextPageID, {
+        	method: 'GET',
+        	headers: {
+            	'Accept': 'application/json',
+            	'Content-Type': 'application/json'
+          }
+      	})
+    	.then((response) => response.json())
+    	.then((responseJson) => {
+    		if (responseJson.length == 0) {
+    			alert("This is the last page");
+
+    			this.setState({
+	    			maxPageID: pageID
+	    		}); // Get the data from API
+    		} else {
+    			this.setState({
+	    			newsContentData: responseJson,
+	    			pageID: nextPageID
+	    		}); // Get the data from API
+    		}
+    	})
+    	.catch((error) => {
+    		//console.error(error);
+    		
+    		alert(error);
+    	});
+    }
+
+    // Read Enter Key Search Page News
+	handleKeyDownSearchPageNews(e) {
+	    if(e.nativeEvent.key == "Enter"){
+	        this.searchPageNewsAction(this.state.searchPageNewsValue);
+	        this.searchPageNewsTxt._root.clear();
+	    }
+	}
+
+	// Read Enter Key Search News
+	handleKeyDownSearchNews(e) {
+	    if(e.nativeEvent.key == "Enter"){
+	        this.searchNewsAction(this.state.searchNewsValue);
+	        this.searchNewsTxt._root.clear();
+	    }
+	}
+
+	// Keyboard Spacer
+	myKeyboardSpacer() {
+		if (Platform.OS === 'ios') {
+		    return <KeyboardSpacer />;
+		} else {
+			return null;
+		}
 	}
 
 	// Get the data
@@ -167,24 +309,43 @@ export default class HomePage extends Component {
 	    	var news_content = newsContentDataDetail.content;
 	    	var news_posted_date = newsContentDataDetail.posted_date;
 	    	var news_posted_by = newsContentDataDetail.posted_by;
+	    	var news_status = newsContentDataDetail.status;
 	    	var news_last_update_date = newsContentDataDetail.last_update_date;
 	    	var news_last_update_by = newsContentDataDetail.last_update_by;
-	    	var profile_picture = 'https://i.pinimg.com/564x/d7/a6/bd/d7a6bd392433310ff6088dda403c4f85.jpg';
+	    	var news_user_picture = newsContentDataDetail.user_picture;
+	    	var news_user_picture_full = news_user_picture ? ipPortAddress() + news_user_picture : 'https://www.sparklabs.com/forum/styles/comboot/theme/images/default_avatar.jpg';
+	    	var news_picture = newsContentDataDetail.picture;
+	    	var news_picture_full = ipPortAddress() + news_picture;
 	    	
+			// Display News Image
+	    	if (news_picture != null) {
+	    		var displayNewsImage = () => {
+	    			return (
+	    				<CardItem>
+			        		<FitImage source = {{uri: news_picture_full}} style={{}} />
+			        	</CardItem>
+	    			)
+	    		}
+	    	} else {
+	    		var displayNewsImage = () => {}
+	    	}
+
 			return (
 				<Card key={index}>
 		        	<CardItem>
 		        		<Left>
-		        			<Thumbnail source={{uri: profile_picture}} />
+		        			<Thumbnail source={{uri: news_user_picture_full}} />
 		        			<Body>
-		        				<Text onPress={() => Linking.openURL(link_post)}>{news_title}</Text>
+		        				<Text>{news_posted_by}</Text>
 		        			</Body>
 		        		</Left>
 		        	</CardItem>
 
 		        	<CardItem>
-		        		<FitImage source = {{uri: profile_picture}} />
+		        		<Text style={{fontWeight: 'bold', fontSize: 20}}>{news_title}</Text>
 		        	</CardItem>
+
+		        	{displayNewsImage()}
 
 		        	<CardItem content>
 		        		<HTMLView value = {news_content} />
@@ -211,6 +372,36 @@ export default class HomePage extends Component {
 
 				<AppHeader />
 		        
+					<Header>
+			          <Body style={{alignItems: 'center'}}>
+			            <Item floatingLabel>
+			            	<Input
+		                    	style={{color: '#fff'}}
+		                    	onChangeText={(text) => this.setState({searchNewsValue: text})}
+		                    	value={this.state.searchNewsValue}
+		                    	keyboardType={'web-search'}
+		                    	secureTextEntry={false}
+		                    	maxLength={20}
+		                    	returnKeyType={'search'}
+		                    	placeholder={'Search News'}
+		                    	enablesReturnKeyAutomatically={true}
+		                    	selectionColor={'#fff'}
+		                    	placeholderTextColor={'#fff'}
+		                    	underlineColorAndroid={'transparent'}
+		                    	/*ref="searchNewsTxt"*/
+		                    	getRef={(input) => { this.searchNewsTxt = input; }}
+		                    	onSubmitEditing={() => {this.searchNewsAction(this.state.searchNewsValue)}}
+		                    	onKeyPress={this.handleKeyDownSearchNews.bind(this)}
+		                    />
+	                    </Item>
+
+	                    {/*<Icon name='search'
+	                    	style={{marginLeft: 280, marginTop: -28, color: '#fff'}}
+  							onPress={() => {this.searchNewsAction(this.state.searchNewsValue)}}
+  						/>*/}
+			          </Body>
+			        </Header>
+
 					<ScrollView >
 		      
 			        	<Content>
@@ -224,6 +415,45 @@ export default class HomePage extends Component {
 						</Content>
 
 		            </ScrollView>
+
+		            <Footer style={{backgroundColor: '#eee'}}>
+					<FooterTab>
+	    				<Button iconLeft  onPress={() => {this.prevAction(this.state.pageID)}}>
+		                    <Icon name='arrow-back' style={{color: '#233F4A'}} />
+		                    <Text style={{color: '#233F4A'}}>Back</Text>
+		                </Button>
+
+	                	<TextInput
+	                    	style={{height: 30, width:150, borderColor: '#233F4A', borderWidth: 1, color: '#233F4A', fontSize: 12, marginTop: 12, marginRight: 7, padding: 5}}
+	                    	onChangeText={(text) => this.setState({searchPageNewsValue: text})}
+	                    	value={this.state.searchPageNewsValue}
+	                    	keyboardType={'numeric'}
+	                    	secureTextEntry={false}
+	                    	maxLength={20}
+	                    	returnKeyType={'search'}
+	                    	placeholder={'Jump to page...'}
+	                    	enablesReturnKeyAutomatically={true}
+	                    	selectionColor={'#233F4A'}
+	                    	placeholderTextColor={'#233F4A'}
+	                    	underlineColorAndroid={'transparent'}
+	                    	ref="searchPageNewsTxt"
+	                    	/*getRef={(input) => { this.searchPageNewsTxt = input; }}*/
+	                    	onSubmitEditing={() => {this.searchPageNewsAction(this.state.searchPageNewsValue)}}
+	                    	onKeyPress={this.handleKeyDownSearchPageNews.bind(this)}
+	                    />
+	                    
+  						<Button iconRight onPress={() => {this.nextAction(this.state.pageID)}}>
+		                    <Icon name='arrow-forward' style={{color: '#233F4A'}} />
+		                    <Text style={{color: '#233F4A'}}>Next</Text>
+		                </Button>
+	    			</FooterTab>
+    			</Footer>
+
+    			<Footer>
+					<FooterTab>
+	    				
+	    			</FooterTab>
+    			</Footer>
 
 		        
 

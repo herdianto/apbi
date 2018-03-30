@@ -57,7 +57,8 @@ export default class AboutPage extends Component {
 			usernameLogin: '',
 			currentCount: 3,
 			usernameSession: '',
-			tokenSession: ''
+			tokenSession: '',
+			pageSession: ''
 		}
 
 		// AsyncStorage - Save Data to Session Storage
@@ -66,7 +67,8 @@ export default class AboutPage extends Component {
               	let resultParsed = JSON.parse(result)
               	this.setState({
                 	usernameSession: resultParsed.usernameSession,
-                  	tokenSession: resultParsed.tokenSession
+                  	tokenSession: resultParsed.tokenSession,
+                  	pageSession: resultParsed.pageSession
               	});
           	}
 	    });
@@ -145,22 +147,40 @@ export default class AboutPage extends Component {
 	    	var about_posted_by = aboutContentDataDetail.posted_by;
 	    	var about_last_update_date = aboutContentDataDetail.last_update_date;
 	    	var about_last_update_by = aboutContentDataDetail.last_update_by;
-	    	var profile_picture = 'https://i.pinimg.com/564x/d7/a6/bd/d7a6bd392433310ff6088dda403c4f85.jpg';
+	    	var about_user_picture = aboutContentDataDetail.user_picture;
+	    	var about_user_picture_full = about_user_picture ? ipPortAddress() + about_user_picture + '?token=' + this.state.tokenSession : 'https://www.sparklabs.com/forum/styles/comboot/theme/images/default_avatar.jpg';
+	    	var about_picture = aboutContentDataDetail.picture;
+	    	var about_picture_full = ipPortAddress() + about_picture;
 	    	
+			// Display About Image
+	    	if (about_picture != null) {
+	    		var displayAboutImage = () => {
+	    			return (
+	    				<CardItem>
+			        		<FitImage source = {{uri: about_picture_full}} style={{}} />
+			        	</CardItem>
+	    			)
+	    		}
+	    	} else {
+	    		var displayAboutImage = () => {}
+	    	}
+
 			return (
 				<Card key={about_id}>
 		        	<CardItem>
 		        		<Left>
-		        			<Thumbnail source={{uri: profile_picture}} />
+		        			<Thumbnail source={{uri: about_user_picture_full}} />
 		        			<Body>
-		        				<Text onPress={() => Linking.openURL(link_post)}>{about_title}</Text>
+		        				<Text>{about_posted_by}</Text>
 		        			</Body>
 		        		</Left>
 		        	</CardItem>
 
 		        	<CardItem>
-		        		<FitImage source = {{uri: profile_picture}} />
+		        		<Text style={{fontWeight: 'bold', fontSize: 20}}>{about_title}</Text>
 		        	</CardItem>
+
+		        	{displayAboutImage()}
 
 		        	<CardItem content>
 		        		<HTMLView value = {about_content} />
