@@ -93,11 +93,12 @@ var auth = {
                 let device_id = req.body.device_id;
                 let params_delete = [dbUserObj.id, device_id];
                 let query_cmd_delete = "DELETE FROM user_token WHERE user_id=? AND device_id=?"
-                query(mysql.format(query_cmd_delete, params_delete));
                 let params_insert = [dbUserObj.id, device_id, login_response.token, current_time];
                 let query_cmd_insert = "INSERT INTO user_token (user_id, device_id, token, last_update) values (?,?,?,?)";
-                query(mysql.format(query_cmd_insert, params_insert));
-
+                query(mysql.format(query_cmd_delete, params_delete)).then(function(res_1){
+                    query(mysql.format(query_cmd_insert, params_insert));
+                    console.log(mysql.format(query_cmd_insert, params_insert));
+                })
                 //send response
                 res.status(200);
                 res.json(login_response);                
