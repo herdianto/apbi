@@ -18,6 +18,7 @@ import KeyboardSpacer from 'react-native-keyboard-spacer';
 import FileSystem from 'react-native-filesystem';
 //import HideableView from 'react-native-hideable-view';
 import ImagePicker from 'react-native-image-picker';
+import PhotoUpload from 'react-native-photo-upload';
 
 // Import My Own Libraries
 import { hello, getImage, contentSnippet, ipAddress, portAddress, ipPortAddress } from '../../helpers/helpers';
@@ -383,7 +384,7 @@ export default class EditProfilePage extends Component {
 	// Get the data
 	render() {
 
-		var profile_picture = this.state.profileContentData.picture ? ipPortAddress() + this.state.profileContentData.picture + '?token=' + this.state.tokenSession : 'https://www.sparklabs.com/forum/styles/comboot/theme/images/default_avatar.jpg';
+		var profile_picture = this.state.profileContentData.picture ? ipPortAddress() + this.state.profileContentData.picture + '?token=' + this.state.tokenSession + '&time=' + new Date().getTime() : 'https://www.sparklabs.com/forum/styles/comboot/theme/images/default_avatar.jpg';
 
 	    return (
 

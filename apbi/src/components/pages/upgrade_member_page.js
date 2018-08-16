@@ -43,7 +43,7 @@ const isLandscape = () => {
     return dim.width >= dim.height;
 };
 
-export default class AboutPage extends Component {
+export default class UpgradeMemberPage extends Component {
 
 	// Create Constructor because the "data" (this.state.data) will be empty
 	// this.state.data gets from data: responseJson.feed.entry
@@ -89,7 +89,7 @@ export default class AboutPage extends Component {
 	}
 
 	componentDidMount() {
-		this.getAboutContent(); // Get About Content
+		//this.getAboutContent(); // Get About Content
 	}
 
 	// Unmount the variable
@@ -139,67 +139,19 @@ export default class AboutPage extends Component {
 	// Get the data
 	render() {
 
-		let aboutContentResult = this.state.aboutContentData.map((aboutContentDataDetail, index) => {
-	    	var about_id = aboutContentDataDetail.id;
-	    	var about_title = aboutContentDataDetail.title;
-	    	var about_content = aboutContentDataDetail.content;
-	    	var about_posted_date = aboutContentDataDetail.posted_date;
-	    	var about_posted_by = aboutContentDataDetail.posted_by;
-	    	var about_last_update_date = aboutContentDataDetail.last_update_date;
-	    	var about_last_update_by = aboutContentDataDetail.last_update_by;
-	    	var about_user_picture = aboutContentDataDetail.user_picture;
-	    	var about_user_picture_full = about_user_picture ? ipPortAddress() + about_user_picture + '?token=' + this.state.tokenSession + '&time=' + new Date().getTime() : 'https://www.sparklabs.com/forum/styles/comboot/theme/images/default_avatar.jpg';
-	    	var about_picture = aboutContentDataDetail.picture;
-	    	var about_picture_full = ipPortAddress() + about_picture;
-	    	
-			// Display About Image
-	    	if (about_picture != null) {
-	    		var displayAboutImage = () => {
-	    			return (
-	    				<CardItem>
-			        		<FitImage source = {{uri: about_picture_full}} style={{}} />
-			        	</CardItem>
-	    			)
-	    		}
-	    	} else {
-	    		var displayAboutImage = () => {}
-	    	}
-
-			return (
-				<Card key={about_id}>
+		let upgradeMemberResult = () => {
+	    	return (
+				<Card>
 		        	<CardItem>
-		        		<Left>
-		        			<Thumbnail source={{uri: about_user_picture_full}} />
-		        			<Body>
-		        				<Text>{about_posted_by}</Text>
-		        			</Body>
-		        		</Left>
+		        		<Text style={{fontWeight: 'bold', fontSize: 20}}>Upgrade to Member</Text>
 		        	</CardItem>
-
-		        	<CardItem>
-		        		<Text style={{fontWeight: 'bold', fontSize: 20}}>{about_title}</Text>
-		        	</CardItem>
-
-		        	{displayAboutImage()}
 
 		        	<CardItem content>
-		        		<HTMLView value = {about_content} />
-		        	</CardItem>
-
-		        	<CardItem>
-			        		<Icon active name = "time" />
-			        		<Text style={{marginLeft: -5}}><TimeAgo time = {about_posted_date} /></Text>
-			        	
-			        		{/*<Icon active name = "share" style={{marginLeft: 10}} />
-			        		<Text style={{marginLeft: -10}}>{about_posted_by} Shares</Text>
-			        	
-			        		<Icon active name = "happy" style={{marginLeft: 10}} />
-			        		<Text style={{marginLeft: -5}}>{about_posted_by} Likes</Text>*/}
-			        	
+		        		<HTMLView value = "<a href='https://drive.google.com/file/d/16tyH4qbk09AcIKJo0yxG_jxUeYYFKgdt/view?usp=sharing'>Download form here!</a>" />
 		        	</CardItem>
 		        </Card>
 			)
-		});
+		};
 
 	    return (
 
@@ -213,7 +165,7 @@ export default class AboutPage extends Component {
 
 		            		{/*<Text>About Page {this.state.tokenSession}</Text>*/}
 
-		            		{aboutContentResult}
+		            		{upgradeMemberResult()}
 
 		            		{/*<Text>{this.state.currentCount}</Text>*/}
 						
@@ -231,4 +183,4 @@ export default class AboutPage extends Component {
 }
 
 // Export this module because we want to import it in the main file
-module.export = AboutPage;
+module.export = UpgradeMemberPage;

@@ -409,7 +409,7 @@ export default class ForumPage extends Component {
 	    	var forum_last_update_date = forumContentDataDetail.last_update_date;
 	    	var forum_last_update_by = forumContentDataDetail.last_update_by;
 	    	var forum_profile_picture = forumContentDataDetail.user_image;
-	    	var forum_profile_picture_full = forum_profile_picture != null ? ipPortAddress() + forum_profile_picture + '?token=' + this.state.tokenSession : 'https://www.sparklabs.com/forum/styles/comboot/theme/images/default_avatar.jpg';
+	    	var forum_profile_picture_full = forum_profile_picture != null ? ipPortAddress() + forum_profile_picture + '?token=' + this.state.tokenSession + '&time=' + new Date().getTime() : 'https://www.sparklabs.com/forum/styles/comboot/theme/images/default_avatar.jpg';
 	    	var forum_picture = forumContentDataDetail.picture;
 	    	var forum_picture_full = ipPortAddress() + forum_picture + '?token=' + this.state.tokenSession;
 

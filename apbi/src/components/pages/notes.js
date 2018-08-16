@@ -121,3 +121,49 @@
     buttonPlayURL: () => {}
   }
 ]*/
+
+
+flow mobile
+===========
+index.android.js => because index_page.js is defined first, it will direct to index_page.js first => Home | About | Forum | Product | Profile
+
+You can define renderbackbutton and renderrightbutton in index.android.js or in forum_page.js but use it in componentdidmount
+Actions.refresh({
+  //title: this.props.product_name,
+  renderRightButton: this.renderRightButton,
+  //renderRightButton: this.renderRightButton
+});
+
+appBody, appBodyData, appBodyDataSecond are not used
+appFooter and appHeader are still used
+appFooter is used to make navigation displayed on top of router navigation
+
+refresh automatically
+======================
+- use interval
+--------------
+// Set Timer to change the question
+this._interval = setInterval(() => {
+    this.getForumContent(this.state.pageID); // Get Forum Content
+}, 1000);
+
+- use timermine
+---------------
+// Set time count from 3 2 1
+timerMine() {
+var newCount = this.state.currentCount - 1;
+
+if (newCount >= 0) {
+  this.setState({
+    currentCount: newCount
+  })
+
+  if (newCount == 0) {
+    // Set Timer to 3 again
+    this.setState({
+      currentCount: 3
+    })
+  }
+} else {
+  clearInterval(this._interval);
+}

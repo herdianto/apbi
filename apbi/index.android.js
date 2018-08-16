@@ -43,6 +43,7 @@ import CartPage from './src/components/pages/cart_page';
 import ProfilePage from './src/components/pages/profile_page';
 import ChangePasswordPage from './src/components/pages/change_password_page';
 import EditProfilePage from './src/components/pages/edit_profile_page';
+import UpgradeMemberPage from './src/components/pages/upgrade_member_page';
 import TransactionPage from './src/components/pages/transaction_page';
 import TransactionDetailPage from './src/components/pages/transaction_detail_page';
 import PaymentConfirmationPage from './src/components/pages/payment_confirmation_page';
@@ -58,7 +59,7 @@ import ContactUsPage from './src/components/pages/contact_us_page';
 //Create a dedicated class that will manage the tabBar icon
 class TabIcon extends Component {
   render() {
-    var color = this.props.selected ? '#00f240' : '#301c2a';
+    var color = this.props.selected ? '#FFF' : '#5DBCD2';
     var active = this.props.selected ? true : false;
 
     if (this.props.title == "Home") {
@@ -75,7 +76,7 @@ class TabIcon extends Component {
 
     return (
       <View >
-        <Icon active={active} name={name}/>
+        <Icon active={active} name={name} style={{color: color}}/>
         {/*<Text style={{color: color, fontSize: 12}}>{this.props.title}</Text>*/}
       </View>
     );
@@ -110,9 +111,9 @@ export default class apbi extends Component {
 
   // Disable Back Button
   handleBackButton() {
-    //ToastAndroid.show('Back button is pressed', ToastAndroid.SHORT);
+    ToastAndroid.show('Please use navigation in Application', ToastAndroid.SHORT);
 
-    BackHandler.exitApp()
+    //BackHandler.exitApp()
     return true;
   }
 
@@ -201,7 +202,7 @@ export default class apbi extends Component {
                     leftButtonIconStyle={{tintColor: '#fff'}}
                     barButtonTextStyle={{color: '#fff'}}
                     barButtonIconStyle={{tintColor: '#fff'}}
-                    renderRightButton={() => this.renderRightButton()}
+                    /*renderRightButton={() => this.renderRightButton()}*/
                     initial />
 
                     <Scene
@@ -269,6 +270,17 @@ export default class apbi extends Component {
                     title="Profile Page"
                     hideNavBar={true}
                     initial />
+
+                  <Scene
+                    key="upgrade_member_page"
+                    component={UpgradeMemberPage}
+                    title="Upgrade Member Page"
+                    hideNavBar={false}
+                    navigationBarStyle={{backgroundColor: '#233F4A'}}
+                    titleStyle={{color: '#fff'}}
+                    leftButtonIconStyle={{tintColor: '#fff'}}
+                    barButtonTextStyle={{color: '#fff'}}
+                    barButtonIconStyle={{tintColor: '#fff'}} />
 
                   <Scene
                     key="transaction_page"

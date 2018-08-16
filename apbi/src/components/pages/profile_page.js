@@ -138,6 +138,11 @@ export default class ProfilePage extends Component {
 	    });
 	}
 
+	// Upgrade Member Action
+	upgradeMemberAction() {
+    	Actions.upgrade_member_page({}); // go to Upgrade Member Page
+    }
+
 	// Display Transaction Action
 	displayTransactionAction() {
     	Actions.transaction_page({}); // go to Display Transaction Page
@@ -231,7 +236,7 @@ export default class ProfilePage extends Component {
 	// Get the data
 	render() {
 
-		var profile_picture = this.state.profileContentData.picture ? ipPortAddress() + this.state.profileContentData.picture + '?token=' + this.state.tokenSession : 'https://www.sparklabs.com/forum/styles/comboot/theme/images/default_avatar.jpg';
+		var profile_picture = this.state.profileContentData.picture ? ipPortAddress() + this.state.profileContentData.picture + '?token=' + this.state.tokenSession + '&time=' + new Date().getTime() : 'https://www.sparklabs.com/forum/styles/comboot/theme/images/default_avatar.jpg';
 
 		return (
 
@@ -251,6 +256,10 @@ export default class ProfilePage extends Component {
 					        </Grid>
 
 					        <List>
+					            <ListItem onPress={() => {this.upgradeMemberAction()}}>
+					              <Text>{this.state.profileContentData.role == "non_member" ? "Non Member - Upgrade" : "Member"}</Text>
+					            </ListItem>
+
 					            <ListItem onPress={() => {this.displayTransactionAction()}}>
 					              <Text>List Transactions</Text>
 					            </ListItem>
