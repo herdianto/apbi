@@ -149,7 +149,8 @@ var user_service = {
             var mailOptions = {
               to: param_values.email,
               subject: 'Welcome to APBI '+ param_values.name,
-              text: 'Your Account has been created as non-member, become a member to get special price!'
+              text: 'Your Account has been created as non-member, become a member to get special price!'+
+              '\n download form in this link to become a member: https://drive.google.com/file/d/16tyH4qbk09AcIKJo0yxG_jxUeYYFKgdt/view?usp=sharing' 
             };
             //send email to user
             email_service.sendMail(mailOptions, function(error, info){
