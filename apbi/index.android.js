@@ -59,7 +59,7 @@ import ContactUsPage from './src/components/pages/contact_us_page';
 //Create a dedicated class that will manage the tabBar icon
 class TabIcon extends Component {
   render() {
-    var color = this.props.selected ? '#FFF' : '#5DBCD2';
+    var color = this.props.selected ? '#5DBCD2' : '#FFF';
     var active = this.props.selected ? true : false;
 
     if (this.props.title == "Home") {

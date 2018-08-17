@@ -238,6 +238,25 @@ export default class ProfilePage extends Component {
 
 		var profile_picture = this.state.profileContentData.picture ? ipPortAddress() + this.state.profileContentData.picture + '?token=' + this.state.tokenSession + '&time=' + new Date().getTime() : 'https://www.sparklabs.com/forum/styles/comboot/theme/images/default_avatar.jpg';
 
+		// Display Upgrade Member
+    	if (this.state.profileContentData.role == "non_member") {
+    		var upgradeMemberDisplay = () => {
+    			return (
+    				<ListItem onPress={() => {this.upgradeMemberAction()}}>
+		              <Text>Non Member - Upgrade</Text>
+		            </ListItem>
+    			)
+    		}
+    	} else {
+    		var upgradeMemberDisplay = () => {
+    			return (
+    				<ListItem>
+		              <Text>Member</Text>
+		            </ListItem>
+    			)
+    		}
+    	}
+
 		return (
 
 			<Container>
@@ -256,9 +275,7 @@ export default class ProfilePage extends Component {
 					        </Grid>
 
 					        <List>
-					            <ListItem onPress={() => {this.upgradeMemberAction()}}>
-					              <Text>{this.state.profileContentData.role == "non_member" ? "Non Member - Upgrade" : "Member"}</Text>
-					            </ListItem>
+					            {upgradeMemberDisplay()}
 
 					            <ListItem onPress={() => {this.displayTransactionAction()}}>
 					              <Text>List Transactions</Text>
